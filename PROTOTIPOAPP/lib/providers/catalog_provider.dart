@@ -28,6 +28,7 @@ class CatalogProvider extends ChangeNotifier {
     try {
       String queryParams = '?limite=50';
       if (busqueda != null && busqueda.isNotEmpty) queryParams += '&busqueda=${Uri.encodeComponent(busqueda)}';
+      if (categoria != null && categoria.isNotEmpty) queryParams += '&categoria=${Uri.encodeComponent(categoria)}';
       if (soloDestacados) queryParams += '&solo_destacados=true';
 
       final res = await _api.get('${ApiConstants.catalogoPublico}$queryParams', requireAuth: false);

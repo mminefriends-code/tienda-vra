@@ -482,7 +482,7 @@ export function Home() {
   const [error, setError] = useState<string | null>(null);
 
   usarSeo({
-    titulo: 'Tiendas Montaño',
+    titulo: 'Tienda VRA - Vestidor Virtual Realidad Aumentada',
     descripcion:
       'Moda boliviana para mujer, hombre y niños. Compra en línea o reserva sin pagar en la sucursal más cercana de Santa Cruz, La Paz, Cochabamba y Sucre.',
   });

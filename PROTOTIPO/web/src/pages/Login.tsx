@@ -72,11 +72,11 @@ export function Login() {
         <div className="mb-6 text-center">
           <img
             src={logoUrl}
-            alt="Tiendas Montaño"
-            className="mx-auto mb-4 h-14 w-14 rounded-xl object-cover shadow-sm ring-1 ring-white/10"
+            alt="Tienda VRA"
+            className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-ink-950 p-1.5 object-contain shadow-md ring-1 ring-amber-500/30"
           />
           <h1 className="text-2xl font-extrabold text-ink-900">Bienvenido de nuevo</h1>
-          <p className="mt-1 text-sm text-ink-500">Ingresa para continuar en Tiendas Montaño</p>
+          <p className="mt-1 text-sm text-ink-500">Ingresa para continuar en Tienda VRA</p>
         </div>
 
         {pendienteReserva && (

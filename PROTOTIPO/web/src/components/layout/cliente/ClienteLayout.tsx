@@ -291,12 +291,12 @@ function ContenidoClienteLayout(): ReactNode {
             {menuAbierto ? <X size={22} /> : <Menu size={22} />}
           </button>
 
-          <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="Tiendas Montaño">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-white/10">
-              <img src={logoUrl} alt="" className="block h-full w-full object-cover" />
+          <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Tienda VRA">
+            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-ink-950 p-1 shadow-sm ring-1 ring-amber-500/30">
+              <img src={logoUrl} alt="Tienda VRA" className="block h-full w-full object-contain" />
             </span>
             <span className="text-lg leading-tight font-extrabold tracking-tight text-ink-900">
-              Tiendas<span className="text-brand-600">Montaño</span>
+              Tienda <span className="text-brand-600">VRA</span>
             </span>
           </Link>
 
@@ -315,7 +315,7 @@ function ContenidoClienteLayout(): ReactNode {
                       sugerenciasDemo.filter((s) => s.toLowerCase().includes(e.target.value.toLowerCase())),
                     );
                   }}
-                  placeholder="Buscar en Tiendas Montaño"
+                  placeholder="Buscar en Tienda VRA"
                   className="h-11 w-full rounded-full border border-ink-200 bg-ink-50 pl-11 pr-4 text-sm text-ink-900 outline-none transition-all placeholder:text-ink-400 focus:border-brand-500 focus:bg-ink-100 focus:ring-4 focus:ring-brand-500/15"
                 />
                 <Search className="pointer-events-none absolute inset-y-0 left-4 my-auto text-ink-400" size={18} />
@@ -375,7 +375,7 @@ function ContenidoClienteLayout(): ReactNode {
               <input
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar en Tiendas Montaño"
+                placeholder="Buscar en Tienda VRA"
                 className="h-11 w-full rounded-full border border-ink-200 bg-ink-50 pl-11 pr-4 text-sm outline-none focus:border-brand-500"
               />
               <Search className="pointer-events-none absolute inset-y-0 left-4 my-auto text-ink-400" size={18} />

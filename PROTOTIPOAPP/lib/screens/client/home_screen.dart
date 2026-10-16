@@ -50,7 +50,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
             const SizedBox(width: 8),
             const Flexible(
               child: Text(
-                'Tiendas Montaño',
+                'Tienda VRA',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),

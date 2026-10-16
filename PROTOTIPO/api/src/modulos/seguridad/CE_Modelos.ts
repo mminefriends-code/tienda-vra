@@ -186,7 +186,7 @@ export class FirstPasswordToken {
   @Column({ name: 'usuario_id', type: 'int', nullable: true })
   usuario_id: number | null;
 
-  @Column({ name: 'token', type: 'varchar', length: 36, unique: true })
+  @Column({ name: 'token', type: 'uuid', unique: true })
   token: string;
 
   @Column({ name: 'expires_at', type: 'timestamp' })
@@ -207,7 +207,7 @@ export class EmailConfirmation {
   @Column({ name: 'usuario_id', type: 'int', nullable: true })
   usuario_id: number | null;
 
-  @Column({ name: 'token', type: 'varchar', length: 36, unique: true })
+  @Column({ name: 'token', type: 'uuid', unique: true })
   token: string;
 
   @Column({ name: 'expires_at', type: 'timestamp' })
@@ -234,7 +234,7 @@ export class PasswordReset {
   @Column({ name: 'email', type: 'varchar', length: 120 })
   email: string;
 
-  @Column({ name: 'token', type: 'varchar', length: 36, unique: true })
+  @Column({ name: 'token', type: 'uuid', unique: true })
   token: string;
 
   @Column({ name: 'expires_at', type: 'timestamp' })

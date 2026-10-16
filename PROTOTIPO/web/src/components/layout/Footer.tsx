@@ -72,11 +72,11 @@ export function Footer() {
 
           <ColumnaFooter titulo="Categorías" items={categorias} />
           <ColumnaFooter titulo="Ayuda" items={ayuda} />
-          <ColumnaFooter titulo="Más" items={['Tiendas Montaño', 'Nuestra historia', 'Trabaja con nosotros', 'Términos y condiciones', 'Privacidad']} />
+          <ColumnaFooter titulo="Más" items={['Tienda VRA', 'Vestidor Virtual RA', 'Nuestra historia', 'Términos y condiciones', 'Privacidad']} />
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-ink-100 pt-5 text-xs text-ink-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} Tiendas Montaño. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} Tienda VRA (Vestidor Virtual Realidad Aumentada). Todos los derechos reservados.</p>
           <p>
             La Paz, Bolivia · <span className="text-ink-500">hecho con ♥</span>
           </p>

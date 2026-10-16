@@ -112,12 +112,12 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="flex items-center gap-2.5 border-b border-ink-100 px-5 py-4">
-        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl ring-1 ring-white/10">
-          <img src={logoUrl} alt="" className="block h-full w-full object-cover" />
+        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-ink-950 p-1 shadow-sm ring-1 ring-amber-500/30">
+          <img src={logoUrl} alt="Tienda VRA" className="block h-full w-full object-contain" />
         </span>
         <div>
-          <p className="text-sm font-extrabold leading-tight text-ink-900">Tiendas Montaño</p>
-          <p className="text-xs font-medium text-ink-400">Panel de Administración</p>
+          <p className="text-sm font-extrabold leading-tight text-ink-900">Tienda VRA</p>
+          <p className="text-xs font-medium text-ink-400">Vestidor Virtual RA · Admin</p>
         </div>
       </div>
 
@@ -219,7 +219,8 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
           <Store size={16} /> Volver a la tienda
         </Link>
         <div className="flex items-center gap-3 rounded-xl bg-ink-50 px-3 py-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-950 text-sm font-bold text-white">          {(usuario?.nombre ?? usuario?.email ?? 'U').charAt(0).toUpperCase()}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink-950 p-1 ring-1 ring-amber-500/40 shadow-sm overflow-hidden">
+            <img src={logoUrl} alt="VRA" className="h-full w-full object-contain" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-ink-900">

@@ -5,7 +5,7 @@
 // directamente en la cabecera del documento, sin librerias externas.
 import { useEffect } from 'react';
 
-const TITULO_BASE = 'Tiendas Montaño';
+const TITULO_BASE = 'Tienda VRA';
 
 function ponerMeta(nombre: string, contenido: string): void {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[name="${nombre}"]`);

@@ -10,12 +10,12 @@ import logoUrl from '@/assets/logo.png';
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <Link to="/" className={cn('flex shrink-0 items-center gap-2', className)} aria-label="Tiendas Montaño">
-      <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-white/10">
-        <img src={logoUrl} alt="" className="block h-full w-full object-cover" />
+    <Link to="/" className={cn('flex shrink-0 items-center gap-2.5', className)} aria-label="Tienda VRA">
+      <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-ink-950 p-1 shadow-sm ring-1 ring-amber-500/30">
+        <img src={logoUrl} alt="Logo Tienda VRA" className="block h-full w-full object-contain" />
       </span>
       <span className="text-lg leading-tight font-extrabold tracking-tight text-ink-900">
-        Tiendas<span className="text-brand-600">Montaño</span>
+        Tienda <span className="text-brand-600">VRA</span>
       </span>
     </Link>
   );
