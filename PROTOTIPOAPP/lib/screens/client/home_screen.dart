@@ -106,14 +106,14 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF0F172A), Color(0xFF1E3A8A)],
+                    colors: [AppTheme.oxfordBlue, AppTheme.storm],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF1E3A8A).withOpacity(0.3),
+                      color: AppTheme.oxfordBlue.withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -125,7 +125,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentGold,
+                        color: AppTheme.steel,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(

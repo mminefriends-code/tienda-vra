@@ -427,6 +427,45 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
         id_usuario INTEGER REFERENCES usuarios(id_usuario),
         fecha_creacion TIMESTAMP DEFAULT NOW()
       )`,
+
+      // Tablas SaaS Multi-Tienda y Suscripciones
+      `CREATE TABLE IF NOT EXISTS tiendas (
+        id_tienda SERIAL PRIMARY KEY,
+        nombre VARCHAR(120) NOT NULL,
+        slug VARCHAR(60) UNIQUE NOT NULL,
+        logo_url TEXT,
+        telefono VARCHAR(30),
+        nit VARCHAR(30),
+        estado VARCHAR(20) DEFAULT 'Activa',
+        fecha_creacion TIMESTAMP DEFAULT NOW()
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS planes_suscripcion (
+        id_plan SERIAL PRIMARY KEY,
+        nombre VARCHAR(60) UNIQUE NOT NULL,
+        descripcion TEXT,
+        precio_mensual NUMERIC(10,2) NOT NULL DEFAULT 0,
+        max_sucursales INT DEFAULT 1,
+        max_productos INT DEFAULT 100,
+        max_usuarios INT DEFAULT 5,
+        vestidor_ra_habilitado BOOLEAN DEFAULT TRUE,
+        reportes_ia_habilitado BOOLEAN DEFAULT TRUE,
+        estado VARCHAR(20) DEFAULT 'Activo',
+        fecha_creacion TIMESTAMP DEFAULT NOW()
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS suscripciones_tienda (
+        id_suscripcion SERIAL PRIMARY KEY,
+        id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE,
+        id_plan INTEGER REFERENCES planes_suscripcion(id_plan),
+        fecha_inicio TIMESTAMP DEFAULT NOW(),
+        fecha_fin TIMESTAMP NOT NULL,
+        dias_gracia INTEGER DEFAULT 5,
+        estado VARCHAR(20) DEFAULT 'Activa',
+        monto_pagado NUMERIC(10,2) DEFAULT 0,
+        metodo_pago VARCHAR(50) DEFAULT 'QR',
+        codigo_comprobante VARCHAR(100)
+      )`,
     ];
 
     for (const q of queries) {
@@ -450,6 +489,11 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       `ALTER TABLE productos ADD COLUMN IF NOT EXISTS destacado BOOLEAN DEFAULT true`,
       `ALTER TABLE ventas ADD COLUMN IF NOT EXISTS total DECIMAL(10,2) DEFAULT 0`,
       `ALTER TABLE ventas ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'Completada'`,
+      `ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE SET NULL`,
+      `ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
+      `ALTER TABLE productos ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
+      `ALTER TABLE ventas ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
+      `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
     ];
 
     for (const mq of migrationQueries) {
@@ -649,6 +693,35 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       INSERT INTO respaldo_programacion (id_programacion, tipo_frecuencia, hora_ejecucion, activo, retencion_dias)
       VALUES (1, 'Diario', '02:00:00', true, 30)
       ON CONFLICT (id_programacion) DO NOTHING;
+
+      -- 10. Planes de Suscripción SaaS
+      INSERT INTO planes_suscripcion (id_plan, nombre, descripcion, precio_mensual, max_sucursales, max_productos, max_usuarios, vestidor_ra_habilitado, reportes_ia_habilitado, estado)
+      VALUES
+        (1, 'Emprendedor', 'Ideal para tiendas que inician con 1 sucursal física o virtual', 150.00, 1, 80, 3, false, true, 'Activo'),
+        (2, 'Profesional', 'Para boutiques en crecimiento con vestidor virtual RA y múltiples sucursales', 350.00, 3, 300, 8, true, true, 'Activo'),
+        (3, 'Empresarial Multi-Sucursal', 'Todo ilimitado: Vestidor RA, IA de voz, inventario centralizado y soporte 24/7', 700.00, 999, 99999, 999, true, true, 'Activo')
+      ON CONFLICT (id_plan) DO NOTHING;
+
+      -- 11. Tiendas Tenants Iniciales
+      INSERT INTO tiendas (id_tienda, nombre, slug, logo_url, telefono, nit, estado)
+      VALUES
+        (1, 'Tiendas Montaño', 'tiendas-montano', '/logo.png', '78912345', '1029384756', 'Activa'),
+        (2, 'Boutique Elegance & Moda', 'boutique-elegance', null, '71234567', '9876543210', 'Activa')
+      ON CONFLICT (id_tienda) DO NOTHING;
+
+      -- 12. Suscripciones Iniciales de Tiendas
+      INSERT INTO suscripciones_tienda (id_suscripcion, id_tienda, id_plan, fecha_inicio, fecha_fin, dias_gracia, estado, monto_pagado, metodo_pago, codigo_comprobante)
+      VALUES
+        (1, 1, 3, NOW(), NOW() + INTERVAL '365 days', 7, 'Activa', 700.00, 'Transferencia_Anual', 'SUB-MONTANO-2026'),
+        (2, 2, 2, NOW(), NOW() + INTERVAL '60 days', 5, 'Activa', 350.00, 'QR_Bancario', 'SUB-ELEGANCE-2026')
+      ON CONFLICT (id_suscripcion) DO NOTHING;
+
+      -- Vincular datos existentes a la tienda principal (id_tienda = 1)
+      UPDATE sucursales SET id_tienda = 1 WHERE id_tienda IS NULL;
+      UPDATE productos SET id_tienda = 1 WHERE id_tienda IS NULL;
+      UPDATE usuarios SET id_tienda = 1 WHERE id_tienda IS NULL;
+      UPDATE ventas SET id_tienda = 1 WHERE id_tienda IS NULL;
+      UPDATE reservas SET id_tienda = 1 WHERE id_tienda IS NULL;
     `);
 
     // Ajuste de secuencias
@@ -665,6 +738,9 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       SELECT setval('inventario_stock_id_stock_seq', (SELECT COALESCE(MAX(id_stock), 1) FROM inventario_stock));
       SELECT setval('ventas_id_venta_seq', (SELECT COALESCE(MAX(id_venta), 1) FROM ventas));
       SELECT setval('venta_items_id_venta_item_seq', (SELECT COALESCE(MAX(id_venta_item), 1) FROM venta_items));
+      SELECT setval('planes_suscripcion_id_plan_seq', (SELECT COALESCE(MAX(id_plan), 1) FROM planes_suscripcion));
+      SELECT setval('tiendas_id_tienda_seq', (SELECT COALESCE(MAX(id_tienda), 1) FROM tiendas));
+      SELECT setval('suscripciones_tienda_id_suscripcion_seq', (SELECT COALESCE(MAX(id_suscripcion), 1) FROM suscripciones_tienda));
     `);
   }
 }

@@ -2,6 +2,7 @@ import {
   Mic,
   BellRing,
   Boxes,
+  Building2,
   CalendarClock,
   CalendarRange,
   ClipboardList,
@@ -40,6 +41,20 @@ export interface PaqueteMenu {
 }
 
 export const PAQUETES_ADMIN: PaqueteMenu[] = [
+  {
+    id: 'saas',
+    titulo: 'Plataforma SaaS',
+    items: [
+      {
+        ruta: '/admin/saas',
+        etiqueta: 'Tiendas y Suscripciones',
+        cu: 'CU47',
+        permiso: 'gestionar_usuarios',
+        icono: Building2,
+        implementado: true,
+      },
+    ],
+  },
   {
     id: 'seguridad',
     titulo: 'Seguridad y Auditoría',

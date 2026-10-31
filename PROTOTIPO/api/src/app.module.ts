@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { HealthController } from './health.controller.js';
 import { SeguridadModule } from './modulos/seguridad/seguridad.module.js';
 import { ClientesModule } from './modulos/clientes/clientes.module.js';
@@ -19,6 +20,7 @@ import { RecomendacionesModule } from './modulos/recomendaciones/Recomendaciones
 import { ReportesVozModule } from './modulos/reportes-voz/ReportesVozModule.js';
 import { DashboardModule } from './modulos/dashboard/DashboardModule.js';
 import { AlertasCriticasModule } from './modulos/alertas/AlertasCriticasModule.js';
+import { SaasModule } from './modulos/saas/SaasModule.js';
 
 import { DatabaseInitializerService } from './database-initializer.service.js';
 
@@ -28,6 +30,7 @@ import { DatabaseInitializerService } from './database-initializer.service.js';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -55,6 +58,7 @@ import { DatabaseInitializerService } from './database-initializer.service.js';
     ReportesVozModule,
     DashboardModule,
     AlertasCriticasModule,
+    SaasModule,
   ],
   controllers: [HealthController],
   providers: [DatabaseInitializerService],

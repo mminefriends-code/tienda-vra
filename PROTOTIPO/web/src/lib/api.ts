@@ -2112,6 +2112,85 @@ export const api = {
     });
     return handleResponse<RespuestaReporteVoz>(res);
   },
+
+  // CU47 - SaaS Multi-Tienda y Gestión de Suscripciones
+  async listarTiendasSaaS(): Promise<any[]> {
+    const res = await solicitar(`${this.baseUrl}/saas/tiendas`);
+    return handleResponse<any[]>(res);
+  },
+
+  async obtenerTiendaSaaS(id: number): Promise<any> {
+    const res = await solicitar(`${this.baseUrl}/saas/tiendas/${id}`);
+    return handleResponse<any>(res);
+  },
+
+  async crearTiendaSaaS(datos: {
+    nombre: string;
+    slug?: string;
+    telefono?: string;
+    nit?: string;
+    id_plan?: number;
+    dias_iniciales?: number;
+    admin_email: string;
+    admin_password?: string;
+    admin_nombre?: string;
+  }): Promise<any> {
+    const res = await solicitar(`${this.baseUrl}/saas/tiendas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    return handleResponse<any>(res);
+  },
+
+  async actualizarTiendaSaaS(id: number, datos: any): Promise<any> {
+    const res = await solicitar(`${this.baseUrl}/saas/tiendas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    return handleResponse<any>(res);
+  },
+
+  async extenderSuscripcionSaaS(id: number, datos: {
+    dias?: number;
+    nueva_fecha_fin?: string;
+    id_plan?: number;
+    monto_pagado?: number;
+    metodo_pago?: string;
+  }): Promise<any> {
+    const res = await solicitar(`${this.baseUrl}/saas/tiendas/${id}/extender`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    return handleResponse<any>(res);
+  },
+
+  async listarPlanesSaaS(): Promise<any[]> {
+    const res = await solicitar(`${this.baseUrl}/saas/planes`);
+    return handleResponse<any[]>(res);
+  },
+
+  async obtenerSuscripcionMiTienda(idTienda?: number): Promise<any> {
+    const url = idTienda ? `${this.baseUrl}/saas/mi-tienda/suscripcion?id_tienda=${idTienda}` : `${this.baseUrl}/saas/mi-tienda/suscripcion`;
+    const res = await solicitar(url);
+    return handleResponse<any>(res);
+  },
+
+  // Sincronización de transacciones generadas en Modo Offline (Sin Internet)
+  async sincronizarVentasOffline(ventas: any[]): Promise<{
+    sincronizadas: number;
+    fallidas: number;
+    detalles: any[];
+  }> {
+    const res = await solicitar(`${this.baseUrl}/ventas/sincronizar-offline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ventas }),
+    });
+    return handleResponse<any>(res);
+  },
 }
 
 export type CompraListaItem = {

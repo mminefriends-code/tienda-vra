@@ -561,4 +561,141 @@ p.nombre AS nombre_producto, p.codigo, p.precio_base, p.porcentaje_iva,
       items: lineas.map((l) => ({ id_ptc: l.id_ptc, cantidad: l.cantidad, precio_unitario: l.precio_unitario })),
     };
   }
+
+  /**
+   * Sincronización de transacciones generadas en modo Offline / Sin Internet.
+   * Recibe una lista de ventas acumuladas localmente en Web o Móvil y las consolida en la BD.
+   */
+  async sincronizarLoteOffline(
+    usuario: Usuario,
+    ventasOffline: Array<{
+      id_offline_temporal: string;
+      items: Array<{ id_ptc: number; cantidad: number }>;
+      id_cliente?: number | null;
+      metodo_pago: 'Efectivo' | 'Tarjeta' | 'QR' | 'Transferencia';
+      nit_cliente?: string | null;
+      razon_social?: string | null;
+      fecha_offline?: string;
+    }>,
+    request: Request,
+  ) {
+    let idSucursal = 1;
+    try {
+      idSucursal = await this.sucursalDelEmpleado(usuario);
+    } catch {
+      idSucursal = 1;
+    }
+    const resultados = [];
+
+    for (const v of ventasOffline) {
+      try {
+        let subtotal = 0;
+        let impuestos = 0;
+        const lineas: Array<{ id_ptc: number; cantidad: number; precio_unitario: number; subtotal: number }> = [];
+
+        for (const item of v.items) {
+          const [prenda] = (await this.dataSource.query(
+            `SELECT p.id_producto, ptc.id_ptc, pre.precio_base, pre.precio_especial,
+                    cat.porcentaje_iva_default, p.porcentaje_iva
+             FROM producto_talla_color ptc
+             JOIN productos p ON p.id_producto = ptc.id_producto
+             JOIN categorias cat ON cat.id_categoria = p.id_categoria
+             LEFT JOIN producto_precios pre ON pre.id_producto = p.id_producto AND pre.activo = true
+             WHERE ptc.id_ptc = $1`,
+            [item.id_ptc],
+          )) as Array<{
+            id_producto: number;
+            id_ptc: number;
+            precio_base: number;
+            precio_especial: number | null;
+            porcentaje_iva_default: number;
+            porcentaje_iva: number;
+          }>;
+
+          if (prenda) {
+            const precioUnitario = prenda.precio_especial != null ? Number(prenda.precio_especial) : Number(prenda.precio_base ?? 0);
+            const sub = item.cantidad * precioUnitario;
+            const imp = sub * (Number(prenda.porcentaje_iva || prenda.porcentaje_iva_default || 0) / 100);
+            subtotal += sub;
+            impuestos += imp;
+            lineas.push({
+              id_ptc: item.id_ptc,
+              cantidad: item.cantidad,
+              precio_unitario: precioUnitario,
+              subtotal: sub,
+            });
+          }
+        }
+
+        subtotal = Math.round(subtotal * 100) / 100;
+        impuestos = Math.round(impuestos * 100) / 100;
+        const total = Math.round((subtotal + impuestos) * 100) / 100;
+        const numFactura = `FAC-SYNC-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
+
+        let idVenta = 0;
+        await this.dataSource.transaction(async (em) => {
+          const creado = this.unaFila(
+            await em.query(
+              `INSERT INTO ventas (numero_factura, id_cliente, id_usuario, id_sucursal, modalidad, metodo_pago,
+                                   subtotal, impuestos, total, estado, fecha_venta)
+               VALUES ($1, $2, $3, $4, 'Presencial', $5, $6, $7, $8, 'Completada', COALESCE($9::timestamp, NOW()))
+               RETURNING id_venta`,
+              [
+                numFactura,
+                v.id_cliente || null,
+                usuario.id_usuario,
+                idSucursal,
+                v.metodo_pago,
+                subtotal,
+                impuestos,
+                total,
+                v.fecha_offline || null,
+              ],
+            ),
+          );
+
+          if (creado) {
+            idVenta = Number(creado.id_venta);
+            for (const l of lineas) {
+              await em.query(
+                `INSERT INTO venta_items (id_venta, id_ptc, cantidad, precio_unitario, subtotal)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [idVenta, l.id_ptc, l.cantidad, l.precio_unitario, l.subtotal],
+              );
+
+              // Rebaja de inventario
+              await em.query(
+                `UPDATE inventario_stock
+                 SET cantidad_disponible = GREATEST(0, cantidad_disponible - $1),
+                     cantidad_vendida = cantidad_vendida + $1
+                 WHERE id_ptc = $2 AND id_sucursal = $3`,
+                [l.cantidad, l.id_ptc, idSucursal],
+              );
+            }
+          }
+        });
+
+        resultados.push({
+          id_offline_temporal: v.id_offline_temporal,
+          id_venta: idVenta,
+          numero_factura: numFactura,
+          estado: 'Sincronizada',
+          total,
+        });
+      } catch (err: any) {
+        resultados.push({
+          id_offline_temporal: v.id_offline_temporal,
+          id_venta: null,
+          estado: 'Error',
+          mensaje: err?.message || 'Error al procesar venta offline.',
+        });
+      }
+    }
+
+    return {
+      sincronizadas: resultados.filter((r) => r.estado === 'Sincronizada').length,
+      fallidas: resultados.filter((r) => r.estado === 'Error').length,
+      detalles: resultados,
+    };
+  }
 }

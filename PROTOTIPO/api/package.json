@@ -28,6 +28,7 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/jwt": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@nestjs/schedule": "^12.0.2",
     "@nestjs/schematics": "^12.0.0",
     "@nestjs/typeorm": "^12.0.1",
     "@types/multer": "^2.2.0",
@@ -40,8 +41,8 @@
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typescript": "^6.0.2",
     "typeorm": "^1.1.1",
+    "typescript": "^6.0.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

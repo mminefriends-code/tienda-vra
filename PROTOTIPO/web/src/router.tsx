@@ -12,6 +12,7 @@ import { RestablecerContrasena } from '@/pages/RestablecerContrasena.js';
 import { EstablecerContrasena } from '@/pages/EstablecerContrasena.js';
 import { Auditoria } from '@/pages/admin/Auditoria.js';
 import { ReportesVoz } from '@/pages/admin/ReportesVoz.js';
+import { AdminSaaS } from '@/pages/admin/AdminSaaS.js';
 import { Usuarios } from '@/pages/admin/Usuarios.js';
 import { Roles } from '@/pages/admin/Roles.js';
 import { Sucursales } from '@/pages/admin/Sucursales.js';
@@ -98,6 +99,7 @@ export function RouterApp() {
         <Route path="caja" element={<AdminCaja />} />
         <Route path="auditoria" element={<Auditoria />} />
         <Route path="reportes/voz" element={<ReportesVoz />} />
+        <Route path="saas" element={<AdminSaaS />} />
         <Route path="*" element={<AdminPlaceholder />} />
       </Route>
 

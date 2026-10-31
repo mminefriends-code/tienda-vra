@@ -390,7 +390,7 @@ function BolsasDecorativas() {
           tres imagenes sueltas. */}
       <svg
         viewBox="0 0 200 200"
-        className="absolute top-1/2 right-2 h-56 w-56 -translate-y-1/2 text-white/[0.07] sm:right-6 lg:h-72 lg:w-72"
+        className="absolute top-1/2 right-2 h-56 w-56 -translate-y-1/2 text-white/[0.08] sm:right-6 lg:h-72 lg:w-72"
       >
         {/* Bolsa grande, la de atras */}
         <g stroke="currentColor" strokeWidth="4" fill="none" strokeLinejoin="round">
@@ -409,27 +409,15 @@ function BolsasDecorativas() {
         </g>
       </svg>
 
-      {/* Dos circulos suaves, para que el negro del cinturon no quede plano.
-          Son tan tenues que no se notan, pero dan profundidad. */}
-      <div className="absolute -top-20 -left-16 h-64 w-64 rounded-full bg-brand-500/10 blur-3xl" />
-      <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-accent-500/10 blur-3xl" />
+      {/* Luces sutiles de escarcha y acero polar */}
+      <div className="absolute -top-20 -left-16 h-64 w-64 rounded-full bg-[#C0D0EF]/20 blur-3xl" />
+      <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-[#668DC0]/20 blur-3xl" />
     </div>
   );
 }
 
 /**
  * Franja de confianza, debajo de los botones del cinturon.
- *
- * Rellena el hueco que quedaba entre el texto y el borde de abajo, y lo hace
- * con informacion que el cliente se pregunta antes de comprar: como se
- * paga, como se recibe y si puede devolver. Todo lo que pone aqui sale del
- * checkout de verdad, no es decoracion inventada: si la tienda no aceptara
- * una forma de pago, el cinturon no la prometeria.
- *
- * Los cuatro iconos vienen de lucide, que ya usaba el resto de la pagina, y
- * el separador es una linea vertical en vez de un borde de cada tarjeta,
- * porque con el borde se ve una lista de cajas y con la linea se ve una
- * sola fila continua.
  */
 function FranjaConfianza() {
   const datos = [
@@ -456,17 +444,17 @@ function FranjaConfianza() {
   ];
 
   return (
-    <div className="mt-8 border-t border-white/10 pt-6">
-      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-white/40">
+    <div className="mt-8 border-t border-[#C0D0EF]/20 pt-6">
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-[#C0D0EF]/70">
         Comprar aquí es fácil
       </p>
       <ul className="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4">
         {datos.map((d) => (
           <li key={d.titulo} className="flex items-start gap-2.5">
-            <d.icono size={16} className="mt-0.5 shrink-0 text-accent-400" />
+            <d.icono size={16} className="mt-0.5 shrink-0 text-[#C0D0EF]" />
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-white/90">{d.titulo}</p>
-              <p className="text-[11px] leading-tight text-white/45">{d.texto}</p>
+              <p className="text-xs font-semibold text-white">{d.titulo}</p>
+              <p className="text-[11px] leading-tight text-[#C0D0EF]/75">{d.texto}</p>
             </div>
           </li>
         ))}
@@ -530,18 +518,18 @@ export function Home() {
           translucido, que no comunicaba nada y hacia ruido de fondo. Ahora hay
           dos columnas: el texto a la izquierda y las prendas de verdad a la
           derecha, en un carrusel. */}
-      <section className="relative -mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-zinc-800 via-ink-950 to-black px-6 py-10 sm:mx-0 sm:px-10 sm:py-14">
+      <section className="relative -mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#0F1C30] via-[#1C2F4D] to-[#304A6E] px-6 py-10 sm:mx-0 sm:px-10 sm:py-14 shadow-xl border border-[#304A6E]/40">
         <BolsasDecorativas />
 
         <div className="relative z-10 flex flex-col items-center gap-10 lg:flex-row lg:justify-between">
           <div className="max-w-xl text-center lg:text-left">
-            <Badge variant="accent" className="mb-4 border-accent-300/40 bg-accent-400/15 text-accent-200">
+            <Badge variant="accent" className="mb-4 border-[#C0D0EF]/40 bg-[#C0D0EF]/15 text-[#C0D0EF]">
               <span aria-hidden>✨</span> Nuevo: Vestidor Virtual
             </Badge>
             <h1 className="text-3xl leading-tight font-extrabold text-white sm:text-4xl">
               Pruébate la ropa antes de comprarla.
             </h1>
-            <p className="mt-3 text-sm text-brand-100 sm:text-base">
+            <p className="mt-3 text-sm text-[#C0D0EF]/90 sm:text-base">
               Descubre el catálogo de temporada y usa nuestro vestidor con realidad aumentada para ver cómo te
               queda cualquier prenda.
             </p>
@@ -549,13 +537,13 @@ export function Home() {
               <Link to="/catalogo">
                 <Button
                   size="lg"
-                  className="bg-accent-500 text-ink-950 hover:bg-accent-400 active:bg-accent-600"
+                  className="bg-[#668DC0] text-white hover:bg-[#5277A8] active:bg-[#304A6E] border border-[#C0D0EF]/30 shadow-md font-bold"
                 >
                   <ScanLine size={18} /> Probar en vestidor
                 </Button>
               </Link>
               <Link to="/catalogo">
-                <Button size="lg" variant="secondary" className="bg-white/15 text-white hover:bg-white/25">
+                <Button size="lg" variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur">
                   Ver catálogo
                 </Button>
               </Link>

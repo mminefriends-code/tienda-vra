@@ -218,3 +218,8 @@ _Etapas del PUDS aplicadas al proyecto. Se irán marcando según se avance._
 | 01/09/2026 | Flujos PUDS: 2.2 Lista de Casos de Uso (46 CU en 8 grupos con prioridades) |
 | 01/09/2026 | Detalle de CU Ciclo 1 (CU01–CU27) con flujos principales y excepciones |
 | 01/09/2026 | Detalle de CU Ciclo 1 **v3** (CU07–CU27) intensificado al estándar CU01 → `Detalle CU Ciclo 1 v3.md` |
+| 31/10/2026 | Renovación de paleta a estética Nieve y Oxford Blue (#C2C6C3, #C0D0EF, #668DC0, #304A6E, #0F1C30) en Web y App Móvil. |
+| 31/10/2026 | Arquitectura SaaS Multi-Tienda y Suscripciones: Módulo `saas` con entidades `tiendas`, `planes_suscripcion`, `suscripciones_tienda`, migración de `id_tienda` en tablas troncales y panel `AdminSaaS.tsx` (CU47). |
+| 31/10/2026 | Modo Offline Tolerante a Fallos (Outbox Pattern): endpoint en lote `/ventas/sincronizar-offline`, buffer local y botón "Cargar datos pendientes" en POS Web (`AdminCaja.tsx`) y App Móvil (`cart_screen.dart`). |
+| 31/10/2026 | Reportes Inteligentes con IA y Machine Learning: síntesis auditiva TTS en altavoz, modelos predictivos de demanda, Pareto ABC y detección de anomalías (`ReportesVoz.tsx`). |
+| 31/10/2026 | Procesos Cíclicos automatizados con `@nestjs/schedule` para expiración diaria de suscripciones, recálculo periódico de ML y mantenimiento. |

@@ -107,4 +107,16 @@ export class VentasController {
     };
     return this.ventasService.crearVentaPresencial(currentUser, dto, request);
   }
+
+  @Post('sincronizar-offline')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  sincronizarOffline(
+    @Body() body: { ventas: any[] },
+    @Req() request: Request,
+    @UsuarioActual() currentUser: Usuario,
+  ) {
+    const ventas = Array.isArray(body?.ventas) ? body.ventas : [];
+    return this.ventasService.sincronizarLoteOffline(currentUser, ventas, request);
+  }
 }

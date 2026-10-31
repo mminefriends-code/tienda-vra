@@ -24,6 +24,15 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
     permisos.includes('*') || (item.permiso ? permisos.includes(item.permiso) : true);
 
   const [nAlertas, setNAlertas] = useState<number | null>(null);
+  const [tiendaInfo, setTiendaInfo] = useState<{ nombre: string; dias_restantes: number; plan_actual: string } | null>(null);
+
+  useEffect(() => {
+    api.obtenerSuscripcionMiTienda()
+      .then((res) => {
+        if (res) setTiendaInfo(res);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!tokenPuedeAlertas()) return;
@@ -112,12 +121,19 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="flex items-center gap-2.5 border-b border-ink-100 px-5 py-4">
-        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-ink-950 p-1 shadow-sm ring-1 ring-amber-500/30">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#0F1C30] p-1 shadow-sm ring-1 ring-[#C0D0EF]/60">
           <img src={logoUrl} alt="Tienda VRA" className="block h-full w-full object-contain" />
         </span>
-        <div>
-          <p className="text-sm font-extrabold leading-tight text-ink-900">Tienda VRA</p>
-          <p className="text-xs font-medium text-ink-400">Vestidor Virtual RA · Admin</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-extrabold leading-tight text-ink-900">
+            {tiendaInfo?.nombre || 'Tiendas Montaño'}
+          </p>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+            <p className="truncate text-[10px] font-bold text-[#304A6E]">
+              {tiendaInfo ? `${tiendaInfo.plan_actual} · ${tiendaInfo.dias_restantes}d` : 'SaaS Activo'}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -127,7 +143,7 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
             dashboard no se quita del menu lateral: aqui solo se repite como
             atajo, tomando los mismos datos de adminMenu.ts. */}
         {itemDashboard && permitido(itemDashboard) && (
-          <div className="mb-5 rounded-xl border border-ink-800 bg-ink-950 p-1">
+          <div className="mb-5 rounded-xl border border-[#304A6E] bg-[#0F1C30] p-1">
             <NavLink
               to={itemDashboard.ruta}
               end
@@ -135,7 +151,7 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition',
-                  isActive ? 'bg-white text-ink-950' : 'text-white hover:bg-white/10',
+                  isActive ? 'bg-white text-[#0F1C30]' : 'text-white hover:bg-white/10',
                 )
               }
             >
@@ -143,13 +159,13 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
                 <>
                   <itemDashboard.icono
                     size={18}
-                    className={isActive ? 'text-ink-950' : 'text-white/80'}
+                    className={isActive ? 'text-[#0F1C30]' : 'text-white/80'}
                   />
                   <span className="flex-1">{itemDashboard.etiqueta}</span>
                   <span
                     className={cn(
                       'rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold',
-                      isActive ? 'bg-ink-100 text-ink-700' : 'bg-white/15 text-white/90',
+                      isActive ? 'bg-brand-100 text-[#0F1C30]' : 'bg-white/15 text-white/90',
                     )}
                   >
                     {itemDashboard.cu}
@@ -174,7 +190,7 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
                     className={({ isActive }) =>
                       cn(
                         'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                        isActive ? 'bg-ink-950 text-white' : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
+                        isActive ? 'bg-[#0F1C30] text-white shadow-xs' : 'text-ink-600 hover:bg-brand-50 hover:text-ink-900',
                       )
                     }
                   >

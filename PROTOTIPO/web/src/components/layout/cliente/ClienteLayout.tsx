@@ -292,11 +292,11 @@ function ContenidoClienteLayout(): ReactNode {
           </button>
 
           <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="Tienda VRA">
-            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-ink-950 p-1 shadow-sm ring-1 ring-amber-500/30">
+            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#0F1C30] p-1 shadow-sm ring-1 ring-[#C0D0EF]/60">
               <img src={logoUrl} alt="Tienda VRA" className="block h-full w-full object-contain" />
             </span>
             <span className="text-lg leading-tight font-extrabold tracking-tight text-ink-900">
-              Tienda <span className="text-brand-600">VRA</span>
+              Tienda <span className="text-[#304A6E]">VRA</span>
             </span>
           </Link>
 

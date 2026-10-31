@@ -145,6 +145,38 @@ export function Login() {
             </Link>
           </p>
         </div>
+
+        {/* Acceso Rápido Demo para Evaluación / SuperAdmin */}
+        <div className="mt-6 rounded-2xl border border-[#D6E0ED] bg-[#F5F8FC] p-3.5 text-xs">
+          <p className="mb-2 text-center font-bold text-[#0F1C30]">
+            ⚡ Acceso Rápido de Demostración:
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCredencial('admin@tiendasmontano.bo');
+                setPassword('admin123');
+              }}
+              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+            >
+              <span className="block font-bold text-[#304A6E]">👑 Super Admin</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">admin@tiendasmontano.bo</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCredencial('caja.lapaz@tiendasmontano.bo');
+                setPassword('admin123');
+              }}
+              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+            >
+              <span className="block font-bold text-emerald-700">🛒 Cajero POS</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">caja.lapaz@...</span>
+            </button>
+          </div>
+        </div>
       </Card>
     </div>
   );

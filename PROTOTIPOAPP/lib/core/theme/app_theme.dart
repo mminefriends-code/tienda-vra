@@ -2,16 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Paleta de colores de Tiendas Montaño
-  static const Color primary = Color(0xFF0F172A); // Slate 900
-  static const Color primaryLight = Color(0xFF1E293B);
-  static const Color accent = Color(0xFF2563EB); // Royal Blue
-  static const Color accentGold = Color(0xFFD97706); // Amber Gold
-  static const Color backgroundLight = Color(0xFFF8FAFC);
+  // Paleta de colores de Tiendas Montaño (Nieve y Azul Marino)
+  static const Color moonlight = Color(0xFFC2C6C3);
+  static const Color frostBlue = Color(0xFFC0D0EF);
+  static const Color steel = Color(0xFF668DC0);
+  static const Color storm = Color(0xFF304A6E);
+  static const Color oxfordBlue = Color(0xFF0F1C30);
+
+  // Mapeo semántico del tema
+  static const Color primary = oxfordBlue; // #0F1C30 (Oxford Blue)
+  static const Color primaryLight = storm; // #304A6E (Storm)
+  static const Color accent = steel; // #668DC0 (Steel)
+  static const Color accentFrost = frostBlue; // #C0D0EF (Frost Blue)
+  static const Color accentGold = Color(0xFFD97706); // Amber Gold para descuentos
+  static const Color backgroundLight = Color(0xFFF4F7FB); // Nieve clara suave
   static const Color surfaceLight = Colors.white;
-  static const Color cardBorder = Color(0xFFE2E8F0);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
+  static const Color cardBorder = Color(0xFFD6E0ED); // Borde escarcha sutil
+  static const Color textPrimary = oxfordBlue;
+  static const Color textSecondary = Color(0xFF5A6E85);
   static const Color success = Color(0xFF10B981);
   static const Color danger = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);

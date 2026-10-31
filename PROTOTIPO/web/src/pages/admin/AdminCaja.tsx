@@ -6,10 +6,13 @@ import {
   FileDown,
   Plus,
   Printer,
+  RotateCcw,
   Search,
   ShoppingCart,
   Trash2,
   User,
+  Wifi,
+  WifiOff,
   X,
 } from 'lucide-react';
 import { api, ApiError } from '@/lib/api.js';
@@ -117,6 +120,83 @@ export function AdminCaja() {
   const [descargandoPdf, setDescargandoPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ mensaje: string; tipo: 'exito' | 'error' } | null>(null);
+
+  // Estados Offline y Tolerancia a Fallos
+  const [estaOnline, setEstaOnline] = useState<boolean>(navigator.onLine);
+  const [ventasOffline, setVentasOffline] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('tm_ventas_offline') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [sincronizando, setSincronizando] = useState(false);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setEstaOnline(true);
+      void sincronizarVentasPendientes();
+    };
+    const handleOffline = () => setEstaOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const sincronizarVentasPendientes = async () => {
+    const pendientes = JSON.parse(localStorage.getItem('tm_ventas_offline') || '[]');
+    if (!pendientes.length) return;
+
+    setSincronizando(true);
+    try {
+      const res = await api.sincronizarVentasOffline(pendientes);
+      if (res.sincronizadas > 0) {
+        localStorage.removeItem('tm_ventas_offline');
+        setVentasOffline([]);
+        setToast({
+          mensaje: `¡${res.sincronizadas} ventas offline sincronizadas exitosamente en el servidor!`,
+          tipo: 'exito',
+        });
+      }
+    } catch {
+      setToast({
+        mensaje: 'Aún no hay conexión disponible con el servidor. Los datos se mantienen a salvo localmente.',
+        tipo: 'error',
+      });
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
+  const guardarVentaOffline = (itemsVenta: ItemVenta[], montoTotal: number) => {
+    const ventaLocal = {
+      id_offline_temporal: `OFF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      items: itemsVenta.map((i) => ({ id_ptc: i.id_ptc, cantidad: i.cantidad })),
+      id_cliente: cliente?.id_cliente ?? null,
+      metodo_pago: metodoPago,
+      nit_cliente: nit.trim() || null,
+      razon_social: razonSocial.trim() || null,
+      fecha_offline: new Date().toISOString(),
+      total: montoTotal,
+    };
+
+    const actual = JSON.parse(localStorage.getItem('tm_ventas_offline') || '[]');
+    const nuevaCola = [...actual, ventaLocal];
+    localStorage.setItem('tm_ventas_offline', JSON.stringify(nuevaCola));
+    setVentasOffline(nuevaCola);
+
+    setItems([]);
+    setCliente(null);
+    setMontoRecibido('');
+    setToast({
+      mensaje: `Venta guardada localmente (Modo Offline - ${nuevaCola.length} en proceso). Se enviará al servidor al reconectar.`,
+      tipo: 'exito',
+    });
+  };
 
   const permisoOk = useMemo(() => {
     const permisos = usuario?.permisos ?? [];
@@ -232,6 +312,14 @@ export function AdminCaja() {
     setEnviando(true);
     setError(null);
     setVentaOk(null);
+
+    // Si no hay conexión, guardar en contingencia offline de inmediato
+    if (!navigator.onLine || !estaOnline) {
+      guardarVentaOffline(items, total);
+      setEnviando(false);
+      return;
+    }
+
     try {
       const res = await api.crearVentaPresencial({
         items: items.map((i) => ({ id_ptc: i.id_ptc, cantidad: i.cantidad })),
@@ -286,7 +374,8 @@ export function AdminCaja() {
         navigate('/login');
         return;
       }
-      setError(err instanceof ApiError ? err.message : 'Error de conexión. Verifica tu acceso a internet e intenta de nuevo.');
+      // Si la petición falló por red o caída de BD, rescatar venta en almacenamiento local
+      guardarVentaOffline(items, total);
     } finally {
       setEnviando(false);
     }
@@ -344,6 +433,47 @@ export function AdminCaja() {
             <h1 className="text-2xl font-extrabold text-ink-900">Nueva Venta (POS)</h1>
             <p className="text-sm text-ink-500">Registra ventas presenciales en el punto de caja.</p>
           </div>
+        </div>
+      </div>
+
+      {/* Barra de Conexión & Tolerancia a Fallos Offline */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#D6E0ED] bg-white p-4 shadow-xs">
+        <div className="flex items-center gap-3">
+          <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${estaOnline ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+            {estaOnline ? <Wifi size={18} /> : <WifiOff size={18} />}
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${estaOnline ? 'bg-emerald-500' : 'bg-amber-500 animate-ping'}`} />
+              <p className="text-sm font-bold text-[#0F1C30]">
+                {estaOnline ? 'Conexión Estable con el Servidor' : 'Modo Sin Conexión (Offline Activo)'}
+              </p>
+            </div>
+            <p className="text-xs text-[#546882]">
+              {estaOnline
+                ? 'Las ventas se registran directamente en la base de datos en tiempo real.'
+                : 'Puedes seguir cobrando: las transacciones se almacenan en memoria local y se sincronizan al volver internet.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {ventasOffline.length > 0 && (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-800">
+              {ventasOffline.length} venta{ventasOffline.length > 1 ? 's' : ''} pendiente{ventasOffline.length > 1 ? 's' : ''}
+            </span>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            loading={sincronizando}
+            disabled={!estaOnline || ventasOffline.length === 0}
+            onClick={sincronizarVentasPendientes}
+            className="gap-2 bg-[#0F1C30] text-white hover:bg-[#304A6E] disabled:opacity-50"
+          >
+            <RotateCcw size={15} />
+            Cargar datos pendientes ({ventasOffline.length})
+          </Button>
         </div>
       </div>
 
