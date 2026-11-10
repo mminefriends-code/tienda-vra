@@ -46,19 +46,40 @@ export function Registro() {
 
     setEnviando(true);
     try {
+      const guestToken = localStorage.getItem('token_invitado') || undefined;
       const resultado = await api.registrar({
         nombre: nombre.trim(),
         email: email.trim(),
         password,
         telefono: telefono.trim() || undefined,
+        token_invitado: guestToken,
       });
+
+      if (resultado.access_token && resultado.usuario) {
+        localStorage.setItem('access_token', resultado.access_token);
+        if (resultado.refresh_token) {
+          localStorage.setItem('refresh_token', resultado.refresh_token);
+        }
+        localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+        localStorage.removeItem('token_invitado');
+        window.dispatchEvent(
+          new CustomEvent('tm:sesion', {
+            detail: { token: resultado.access_token, usuario: resultado.usuario },
+          }),
+        );
+        setExito('¡Cuenta creada con éxito! Ingresando…');
+        setEnviando(false);
+        navigate(redirect || '/checkout');
+        return;
+      }
+
       setExito(resultado.detail);
       setEnviando(false);
       if (resultado.warning) {
         setError(resultado.warning);
         return;
       }
-      window.setTimeout(() => navigate(redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'), 2500);
+      navigate(redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login');
     } catch (err) {
       setEnviando(false);
       if (err instanceof ApiError) {

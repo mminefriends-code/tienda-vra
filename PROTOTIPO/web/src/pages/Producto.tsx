@@ -80,7 +80,7 @@ export function Producto() {
   // el buscador no puede indexarlas por separado ni mostrarles el precio.
   const prenda = datos?.producto;
   usarSeo({
-    titulo: prenda ? `${prenda.nombre}` : 'Prenda | Tiendas Montaño',
+    titulo: prenda ? `${prenda.nombre}` : 'Prenda | Tienda VRA',
     descripcion: prenda
       ? `${prenda.nombre}${prenda.categoria ? ` de ${prenda.categoria}` : ''}. Precio Bs. ${monto(prenda.precio)}. Compra en línea o reserva para probar en la tienda.`
       : 'Cargando la ficha de la prenda.',

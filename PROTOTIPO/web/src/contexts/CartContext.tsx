@@ -15,6 +15,7 @@ interface CartContextValue {
   agregar: (payload: { id_ptc: number; cantidad: number; id_sucursal: number }) => Promise<void>;
   actualizarCantidad: (idCarritoItem: number, cantidad: number) => Promise<void>;
   quitar: (idCarritoItem: number) => Promise<void>;
+  vaciar: () => Promise<void>;
 }
 
 const CarritoVacio: CarritoRespuesta = {
@@ -104,6 +105,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const vaciar = useCallback(async () => {
+    setCargando(true);
+    try {
+      const resultado = await api.vaciarCarrito();
+      setCarrito({
+        carrito: resultado.carrito,
+        subtotal: resultado.subtotal,
+        item: resultado.item,
+        token_invitado: resultado.token_invitado,
+      });
+    } finally {
+      setCargando(false);
+    }
+  }, []);
+
   const totalItems = carrito.carrito?.items.length ?? 0;
   const totalCantidad =
     carrito.carrito?.items.reduce((acc: number, i: CarritoItem) => acc + i.cantidad, 0) ?? 0;
@@ -123,8 +139,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       agregar,
       actualizarCantidad,
       quitar,
+      vaciar,
     }),
-    [carrito, abierto, cargando, agregando, actualizandoIds, totalItems, totalCantidad, refrescar, agregar, actualizarCantidad, quitar],
+    [carrito, abierto, cargando, agregando, actualizandoIds, totalItems, totalCantidad, refrescar, agregar, actualizarCantidad, quitar, vaciar],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

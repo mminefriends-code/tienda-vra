@@ -175,7 +175,7 @@ function TarjetaPrenda({
 
         {/* Floating Color Tag */}
         <span className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold text-ink-700 shadow-xs backdrop-blur border border-ink-100">
-          {colorHover ? `Color: ${colorHover}` : 'Tiendas Montaño'}
+          {colorHover ? `Color: ${colorHover}` : 'Tienda VRA'}
         </span>
       </Link>
 

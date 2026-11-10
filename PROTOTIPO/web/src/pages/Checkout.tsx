@@ -101,7 +101,13 @@ export function Checkout() {
   useEffect(() => {
     api
       .listarSucursalesActivas()
-      .then((lista) => setSucursales(lista))
+      .then((lista) => {
+        setSucursales(lista);
+        if (idSucursal == null && lista.length > 0) {
+          const central = lista.find((s: any) => s.es_central || s.nombre.toLowerCase().includes('central'));
+          setIdSucursal(central ? central.id_sucursal : lista[0].id_sucursal);
+        }
+      })
       .catch(() => setSucursales([]));
   }, []);
 
@@ -116,13 +122,20 @@ export function Checkout() {
             <h1 className="text-xl font-extrabold text-ink-900">Inicia sesión para pagar</h1>
             <p className="max-w-md text-sm text-ink-500">
               Para confirmar tu compra digital necesitas una cuenta de cliente. Tu carrito se conserva mientras inicias
-              sesión.
+              sesión o te registras.
             </p>
-            <Link to="/login" className="w-full">
-              <Button size="lg" fullWidth className="bg-brand-600 hover:bg-brand-700 active:bg-brand-800">
-                Iniciar sesión
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              <Link to="/login?redirect=/checkout" className="flex-1">
+                <Button size="lg" fullWidth className="bg-brand-600 hover:bg-brand-700 active:bg-brand-800 font-bold">
+                  Iniciar sesión
+                </Button>
+              </Link>
+              <Link to="/registro?redirect=/checkout" className="flex-1">
+                <Button size="lg" variant="secondary" fullWidth className="font-bold">
+                  Crear cuenta nueva
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -171,6 +184,7 @@ export function Checkout() {
       });
       setIdVentaCreada(res.id_venta);
       setVentaOk(true);
+      void refrescar();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         navigate('/login');

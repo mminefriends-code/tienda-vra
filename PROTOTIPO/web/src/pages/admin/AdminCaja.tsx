@@ -219,16 +219,42 @@ export function AdminCaja() {
     try {
       const lista = await api.buscarProductosPos(busqueda.trim() || undefined);
       setProductos(lista);
+      if (lista.length > 0 && !busqueda.trim()) {
+        localStorage.setItem('tm_pos_productos_cache', JSON.stringify(lista));
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         navigate('/login');
         return;
       }
-      setProductos([]);
-      setToast({
-        mensaje: err instanceof TypeError ? 'Error de conexión. Verifica tu acceso a internet e intenta de nuevo.' : 'No se pudieron cargar los productos.',
-        tipo: 'error',
-      });
+      // Contingencia Offline: consultar productos desde la memoria local
+      const cached = JSON.parse(localStorage.getItem('tm_pos_productos_cache') || '[]') as ProductoPos[];
+      if (cached.length > 0) {
+        const query = busqueda.trim().toLowerCase();
+        const filtrados = query
+          ? cached.filter(
+              (p) =>
+                p.nombre?.toLowerCase().includes(query) ||
+                p.codigo?.toLowerCase().includes(query) ||
+                p.talla?.toLowerCase().includes(query) ||
+                p.color?.toLowerCase().includes(query),
+            )
+          : cached;
+        setProductos(filtrados);
+        setToast({
+          mensaje: 'Modo Offline Activo: Mostrando prendas desde el almacén local del navegador.',
+          tipo: 'exito',
+        });
+      } else {
+        setProductos([]);
+        setToast({
+          mensaje:
+            err instanceof TypeError
+              ? 'Sin conexión a internet. Conéctate una vez para precargar las prendas en memoria local.'
+              : 'No se pudieron cargar los productos.',
+          tipo: 'error',
+        });
+      }
     } finally {
       setBuscandoProductos(false);
     }
@@ -254,16 +280,21 @@ export function AdminCaja() {
     try {
       const lista = await api.buscarClientesPos(busquedaCliente.trim());
       setClientes(lista);
+      if (lista.length > 0) {
+        localStorage.setItem('tm_pos_clientes_cache', JSON.stringify(lista));
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         navigate('/login');
         return;
       }
-      setClientes([]);
-      setToast({
-        mensaje: err instanceof TypeError ? 'Error de conexión. Verifica tu acceso a internet e intenta de nuevo.' : 'No se pudieron cargar los clientes.',
-        tipo: 'error',
-      });
+      // Contingencia offline para clientes
+      const cached = JSON.parse(localStorage.getItem('tm_pos_clientes_cache') || '[]') as ClientePos[];
+      const query = busquedaCliente.trim().toLowerCase();
+      const filtrados = cached.filter(
+        (c) => c.nombre?.toLowerCase().includes(query) || c.ci?.toLowerCase().includes(query),
+      );
+      setClientes(filtrados);
     } finally {
       setBuscandoClientes(false);
     }

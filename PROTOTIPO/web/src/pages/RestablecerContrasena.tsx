@@ -61,7 +61,7 @@ export function RestablecerContrasena() {
       <Card className="p-6 sm:p-8">
         <div className="mb-6 text-center">
           <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl shadow-sm ring-1 ring-white/10">
-            <img src={logoUrl} alt="Tiendas Montaño" className="block h-full w-full object-cover" />
+            <img src={logoUrl} alt="Tienda VRA" className="block h-full w-full object-cover" />
           </span>
           <h1 className="text-2xl font-extrabold text-ink-900">Nueva contraseña</h1>
           <p className="mt-1 text-sm text-ink-500">Ingresa y confirma tu nueva contraseña.</p>

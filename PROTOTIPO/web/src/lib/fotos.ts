@@ -37,10 +37,14 @@ const FOTOS: FotoProducto[] = [
   { prenda: 'remera', color: 'negro', fichero: 'polera-negra.png' },
   { prenda: 'remera', color: 'blanco', fichero: 'polera-blanca.png' },
   { prenda: 'remera', color: 'gris', fichero: 'polera-gris.png' },
+  { prenda: 'remera', color: 'azul', fichero: 'polera-azul.png' },
+  { prenda: 'remera', color: 'azul marino', fichero: 'polera-azul.png' },
 
   { prenda: 'polo', color: 'negro', fichero: 'polera-negra.png' },
   { prenda: 'polo', color: 'blanco', fichero: 'polera-blanca.png' },
   { prenda: 'polo', color: 'gris', fichero: 'polera-gris.png' },
+  { prenda: 'polo', color: 'azul', fichero: 'polera-azul.png' },
+  { prenda: 'polo', color: 'azul marino', fichero: 'polera-azul.png' },
   { prenda: 'polo', color: 'rojo', fichero: 'polo-rojo.png' },
 
   { prenda: 'campera', color: 'negro', fichero: 'campera-negro.png' },

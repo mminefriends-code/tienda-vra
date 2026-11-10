@@ -102,6 +102,7 @@ export interface RegistroPayload {
   email: string;
   password: string;
   telefono?: string;
+  token_invitado?: string;
 }
 
 export interface RegistroResponse {
@@ -109,6 +110,10 @@ export interface RegistroResponse {
   usuario_id: number;
   confirmacion_email: string;
   warning?: string;
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  usuario?: UsuarioSesion;
 }
 
 export interface RegistroAuditoria {
@@ -390,6 +395,8 @@ export interface SucursalItem {
   telefono: string | null;
   estado: string;
   fecha_registro: string;
+  es_central?: boolean;
+  id_tienda?: number;
 }
 
 // CU18 - Proveedores
@@ -1176,9 +1183,9 @@ export const api = {
     return handleResponse<EmpleadoItem[]>(res);
   },
 
-  async listarSucursalesActivas(): Promise<{ id_sucursal: number; nombre: string }[]> {
-    const res = await solicitar(`${this.baseUrl}/admin/sucursales/activas`);
-    return handleResponse<{ id_sucursal: number; nombre: string }[]>(res);
+  async listarSucursalesActivas(): Promise<{ id_sucursal: number; nombre: string; direccion?: string; ciudad?: string | null; es_central?: boolean }[]> {
+    const res = await solicitar(`${this.baseUrl}/catalogo/publico/sucursales`);
+    return handleResponse<{ id_sucursal: number; nombre: string; direccion?: string; ciudad?: string | null; es_central?: boolean }[]>(res);
   },
 
   async listarCiudades(): Promise<CiudadItem[]> {
@@ -1847,6 +1854,14 @@ export const api = {
 
   async quitarItemCarrito(idCarritoItem: number): Promise<CarritoRespuesta> {
     const res = await solicitar(`${this.baseUrl}/carrito/items/${idCarritoItem}`, {
+      method: 'DELETE',
+      headers: headersConTokenInvitado(),
+    });
+    return handleResponse<CarritoRespuesta>(res);
+  },
+
+  async vaciarCarrito(): Promise<CarritoRespuesta> {
+    const res = await solicitar(`${this.baseUrl}/carrito/vaciar`, {
       method: 'DELETE',
       headers: headersConTokenInvitado(),
     });

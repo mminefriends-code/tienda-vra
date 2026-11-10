@@ -40,14 +40,14 @@ export function Login() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!credencial.trim() || !password) {
+    if (!credencial.trim() || !password.trim()) {
       setError('Ingresa tu correo y contraseña.');
       return;
     }
     setError(null);
     setEnviando(true);
     try {
-      const u = await login(credencial.trim(), password);
+      const u = await login(credencial.trim(), password.trim());
       const destino = desde ?? (esPersonal(u) ? '/admin' : '/');
       navigate(destino, { replace: true });
     } catch (err) {
@@ -146,34 +146,46 @@ export function Login() {
           </p>
         </div>
 
-        {/* Acceso Rápido Demo para Evaluación / SuperAdmin */}
+        {/* Acceso Rápido Demo para Evaluación / SuperAdmin / Cliente */}
         <div className="mt-6 rounded-2xl border border-[#D6E0ED] bg-[#F5F8FC] p-3.5 text-xs">
           <p className="mb-2 text-center font-bold text-[#0F1C30]">
             ⚡ Acceso Rápido de Demostración:
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => {
-                setCredencial('admin@tiendasmontano.bo');
+                setCredencial('admin@tiendavra.bo');
                 setPassword('admin123');
               }}
               className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
             >
-              <span className="block font-bold text-[#304A6E]">👑 Super Admin</span>
-              <span className="font-mono text-[10px] text-[#7E91A8]">admin@tiendasmontano.bo</span>
+              <span className="block font-bold text-[#304A6E]">👑 Admin</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">admin@...</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setCredencial('caja.lapaz@tiendasmontano.bo');
+                setCredencial('caja.lapaz@tiendavra.bo');
                 setPassword('admin123');
               }}
               className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
             >
-              <span className="block font-bold text-emerald-700">🛒 Cajero POS</span>
+              <span className="block font-bold text-emerald-700">🛒 Cajero</span>
               <span className="font-mono text-[10px] text-[#7E91A8]">caja.lapaz@...</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCredencial('maria.gonzales@correo.com');
+                setPassword('admin123');
+              }}
+              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+            >
+              <span className="block font-bold text-amber-700">🛍️ Cliente</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">maria@...</span>
             </button>
           </div>
         </div>

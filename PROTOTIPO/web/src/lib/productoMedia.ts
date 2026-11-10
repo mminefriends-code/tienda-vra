@@ -56,13 +56,9 @@ function normalizarColor(nombre: string): string {
 // foto local.
 export function tipoDePrenda(codigo: string, nombre: string): string | null {
   const t = `${codigo} ${nombre}`.toLowerCase();
-  if (/zapat|calzado|sandal|tenis/.test(t)) return 'zapatilla';
-  if (/pijama|batik/.test(t)) return 'pijama';
-  if (/pantalon|chino|jean|pantal/.test(t)) return 'pantalon';
-  if (/vestido|falda/.test(t)) return 'vestido';
-  if (/campera|abrigo|chaqueta|coat/.test(t)) return 'campera';
-  if (/polo|polera|remera|camiseta|camisa|blusa|t-shirt/.test(t)) return 'remera';
-  return null;
+  if (/canguro|hoodie|sudadera|poleron|chamarra|chaqueta|campera|abrigo|casaca/.test(t)) return 'remera';
+  if (/polo|polera|remera|camiseta|camisa|blusa|t-shirt|tank|musculosa|henley|top/.test(t)) return 'remera';
+  return 'remera';
 }
 
 export function hexDeColor(nombre: string, codigoHex?: string | null): string {

@@ -9,6 +9,7 @@ import { EmailConfirmation, Rol, Usuario, UsuarioRol } from '../seguridad/CE_Mod
 import { BitacoraService } from '../seguridad/SRV_BitacoraService.js';
 import { EmailService } from '../seguridad/SRV_EmailService.js';
 import { SeguridadService } from '../seguridad/SRV_SeguridadService.js';
+import { JwtTokenService } from '../seguridad/SRV_JWTService.js';
 
 @Injectable()
 export class ClienteService {
@@ -17,6 +18,7 @@ export class ClienteService {
     private readonly seguridadService: SeguridadService,
     private readonly bitacoraService: BitacoraService,
     private readonly emailService: EmailService,
+    private readonly jwtTokenService: JwtTokenService,
   ) {}
 
   async registrarCliente(body: RegistroRequest, request?: Request): Promise<RegistroResponse & { statusCode: number }> {
@@ -42,6 +44,7 @@ export class ClienteService {
       email: emailNormalizado,
       password_hash: hash,
       estado: 'Activo',
+      id_tienda: 1,
     });
     await this.dataSource.getRepository(Usuario).save(usuario);
 
@@ -57,6 +60,19 @@ export class ClienteService {
     });
     await this.dataSource.getRepository(Cliente).save(cliente);
 
+    // Migrar carrito de invitado si existe token_invitado
+    const tokenInvitado = body.token_invitado || (request?.headers['x-guest-token'] as string);
+    if (tokenInvitado) {
+      try {
+        await this.dataSource.query(
+          `UPDATE carritos SET id_usuario = $1, token_invitado = NULL WHERE token_invitado = $2 AND LOWER(estado) = 'activo'`,
+          [usuario.id_usuario, tokenInvitado],
+        );
+      } catch {
+        // no crítico
+      }
+    }
+
     const token = randomUUID();
     await this.dataSource.getRepository(EmailConfirmation).insert({
       usuario_id: usuario.id_usuario,
@@ -71,26 +87,36 @@ export class ClienteService {
       usuario.id_usuario,
       'INSERT',
       'clientes',
-      'Alta de nuevo cliente',
+      'Alta de nuevo cliente con auto-autenticación',
       request,
       usuario.id_usuario,
     );
 
-    if (emailOk) {
-      return {
-        statusCode: HttpStatus.CREATED,
-        detail: 'Cuenta creada exitosamente. Ya puedes iniciar sesión.',
-        usuario_id: usuario.id_usuario,
-        confirmacion_email: 'enviado',
-      };
-    }
+    // Generar tokens para auto-login inmediato
+    const accessToken = this.jwtTokenService.crearAccessToken(
+      usuario.id_usuario,
+      'Cliente',
+      rolCliente.permisos_json,
+    );
+    const refreshToken = this.jwtTokenService.crearRefreshToken(usuario.id_usuario);
+
+    const usuarioRes = {
+      id: usuario.id_usuario,
+      nombre: body.nombre,
+      email: emailNormalizado,
+      rol: 'Cliente',
+      permisos: rolCliente.permisos_json,
+    };
 
     return {
-      statusCode: 207,
-      detail: 'Cuenta creada exitosamente. Ya puedes iniciar sesión.',
+      statusCode: HttpStatus.CREATED,
+      detail: 'Cuenta creada e iniciada exitosamente.',
       usuario_id: usuario.id_usuario,
-      confirmacion_email: 'fallido',
-      warning: 'No se pudo enviar el correo de confirmación.',
+      confirmacion_email: emailOk ? 'enviado' : 'simulado',
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: 'Bearer',
+      usuario: usuarioRes,
     };
   }
 }

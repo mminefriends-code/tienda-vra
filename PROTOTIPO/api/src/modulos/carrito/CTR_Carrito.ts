@@ -83,4 +83,13 @@ export class CarritoController {
   ) {
     return this.carritoService.quitarItem(credenciales, idCarritoItem, request);
   }
+
+  @Delete('vaciar')
+  @UseGuards(JwtOpcionalAuthGuard)
+  vaciar(
+    @Req() request: Request,
+    @CredencialesCarritoActual() credenciales: CredencialesCarrito,
+  ) {
+    return this.carritoService.vaciarCarrito(credenciales, request);
+  }
 }

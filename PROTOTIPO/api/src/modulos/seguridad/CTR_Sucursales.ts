@@ -95,6 +95,11 @@ export class SucursalesController {
     return this.sucursalesService.cambiarEstadoCiudad(currentUser, id, body.estado, request);
   }
 
+  @Get('sucursales/activas')
+  async listarSucursalesActivas() {
+    return this.sucursalesService.listarActivas();
+  }
+
   @Get('sucursales')
   async listarSucursales(@UsuarioActual() currentUser: Usuario) {
     return this.sucursalesService.listarSucursales(currentUser);

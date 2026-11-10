@@ -147,7 +147,7 @@ function ModalNuevoEmpleado({
             name="email"
             label="Correo electrónico"
             type="email"
-            placeholder="carlos@tiendasmontano.com"
+            placeholder="carlos@tiendavra.bo"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

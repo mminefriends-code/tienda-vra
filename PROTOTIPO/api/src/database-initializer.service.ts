@@ -14,6 +14,7 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       await this.createAllTables();
       await this.runMigrations();
       await this.seedAllData();
+      await this.seedPolerasTorso();
       this.logger.log('🎉 Base de datos 100% sincronizada, poblada y operativa.');
     } catch (error) {
       this.logger.error('Error al inicializar la base de datos:', error);
@@ -227,7 +228,7 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
         destacado BOOLEAN DEFAULT true,
         descuento DECIMAL(5,2) DEFAULT 0,
         modelo_3d_url TEXT,
-        estado VARCHAR(20) DEFAULT 'Disponible',
+        estado VARCHAR(20) DEFAULT 'Activo',
         fecha_registro TIMESTAMP DEFAULT NOW()
       )`,
 
@@ -494,6 +495,7 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       `ALTER TABLE productos ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
       `ALTER TABLE ventas ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
       `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS id_tienda INTEGER REFERENCES tiendas(id_tienda) ON DELETE CASCADE`,
+      `ALTER TABLE sucursales ADD COLUMN IF NOT EXISTS es_central BOOLEAN DEFAULT false`,
     ];
 
     for (const mq of migrationQueries) {
@@ -521,11 +523,16 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
     // 2. Usuarios
     await this.dataSource.query(`
       INSERT INTO usuarios (id_usuario, email, ci, password_hash, estado, intentos_fallidos) VALUES
-        (1, 'admin@tiendasmontano.bo', '1000001-1A', '${hash}', 'Activo', 0),
-        (2, 'gerencia@tiendasmontano.bo', '1000002-2B', '${hash}', 'Activo', 0),
-        (3, 'vendedor.lapaz@tiendasmontano.bo', '1000005-5E', '${hash}', 'Activo', 0),
-        (4, 'caja.lapaz@tiendasmontano.bo', '1000009-9J', '${hash}', 'Activo', 0),
-        (5, 'maria.gonzales@correo.com', '4567890-1K', '${hash}', 'Activo', 0)
+        (1, 'admin@tiendavra.bo', '1000001-1A', '${hash}', 'Activo', 0),
+        (2, 'gerencia@tiendavra.bo', '1000002-2B', '${hash}', 'Activo', 0),
+        (3, 'catalogo@tiendavra.bo', '1000003-3C', '${hash}', 'Activo', 0),
+        (4, 'compras@tiendavra.bo', '1000004-4D', '${hash}', 'Activo', 0),
+        (5, 'vendedor.lapaz@tiendavra.bo', '1000005-5E', '${hash}', 'Activo', 0),
+        (6, 'vendedor.scz@tiendavra.bo', '1000006-6F', '${hash}', 'Activo', 0),
+        (7, 'vendedor.cbb@tiendavra.bo', '1000007-7G', '${hash}', 'Activo', 0),
+        (8, 'vendedor.elp@tiendavra.bo', '1000008-8H', '${hash}', 'Activo', 0),
+        (9, 'caja.lapaz@tiendavra.bo', '1000009-9J', '${hash}', 'Activo', 0),
+        (10, 'maria.gonzales@correo.com', '4567890-1K', '${hash}', 'Activo', 0)
       ON CONFLICT (id_usuario) DO UPDATE SET password_hash = EXCLUDED.password_hash, estado = 'Activo';
     `);
 
@@ -534,9 +541,14 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       INSERT INTO usuarios_roles (id_usuario, id_rol) VALUES
         (1, 1),
         (2, 2),
-        (3, 3),
-        (4, 3),
-        (5, 4)
+        (3, 2),
+        (4, 2),
+        (5, 3),
+        (6, 3),
+        (7, 3),
+        (8, 3),
+        (9, 3),
+        (10, 4)
       ON CONFLICT DO NOTHING;
     `);
 
@@ -555,13 +567,13 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       ON CONFLICT (id_sucursal) DO NOTHING;
 
       INSERT INTO usuarios_empleados (id_empleado, usuario_id, sucursal_id, nombre, rol, telefono) VALUES
-        (1, 1, 1, 'Administrador Central', 'Administrador', '70011223'),
-        (2, 3, 1, 'Carlos Vendedor', 'Vendedor', '70044556'),
-        (3, 4, 1, 'Ana Cajera', 'Cajero', '70077889')
+        (1, 1, 1, 'Dayana Rojas Ascarraga', 'Administrador', '70011223'),
+        (2, 2, 1, 'Pedro Rojas', 'Gerente General', '70011224')
       ON CONFLICT (id_empleado) DO NOTHING;
 
       INSERT INTO clientes (id_cliente, usuario_id, nombre, telefono, direccion) VALUES
-        (1, 5, 'María Gonzales', '71234567', 'Av. 6 de Agosto #123')
+        (1, 10, 'María Elena González Vargas', '71234567', 'Av. 6 de Agosto #123'),
+        (24, 1, 'Dayana Rojas Ascarraga', '70011223', 'Sucursal Central')
       ON CONFLICT (id_cliente) DO NOTHING;
     `);
 
@@ -591,12 +603,8 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
     // 6. Categorías, Temporadas y Colecciones
     await this.dataSource.query(`
       INSERT INTO categorias (id_categoria, nombre, descripcion) VALUES
-        (1, 'Poleras y Camisetas', 'Poleras de algodón pima, básicas y estampadas'),
-        (2, 'Camisas y Blusas', 'Camisas formales y casuales para vestir elegante'),
-        (3, 'Pantalones y Jeans', 'Jeans denim stretch y pantalones de vestir'),
-        (4, 'Chaquetas y Chamarras', 'Chamarras abrigadas, cuero y bomber'),
-        (5, 'Vestidos', 'Vestidos de fiesta y casuales de temporada'),
-        (6, 'Ropa Deportiva', 'Conjuntos deportivos, buzos y licras')
+        (1, 'Poleras', 'Poleras de algodón pima, básicas y estampadas'),
+        (9, 'Canguros y Hoodies', 'Sudaderas con capucha y canguros térmicos')
       ON CONFLICT (id_categoria) DO NOTHING;
 
       INSERT INTO temporadas (id_temporada, nombre, fecha_inicio, fecha_fin, estado) VALUES
@@ -613,13 +621,13 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
     // 7. Productos con precios, fotos de prendas aisladas y stock
     await this.dataSource.query(`
       INSERT INTO productos (id_producto, codigo, nombre, descripcion, id_categoria, id_temporada, precio_base, porcentaje_iva, destacado, descuento, estado, fecha_registro) VALUES
-        (1, 'POL-001', 'Polera Premium Algodón Pima', 'Polera suave de alta durabilidad, corte regular fit.', 1, 1, 120.00, 0, true, 0, 'Disponible', NOW()),
-        (2, 'CAM-002', 'Camisa Oxford Slim Fit Celeste', 'Camisa clásica para oficina o eventos casuales.', 2, 1, 210.00, 0, true, 0, 'Disponible', NOW()),
-        (3, 'JEA-003', 'Jeans Denim Clásico Azul', 'Jeans resistente de mezclilla premium con elasticidad.', 3, 2, 280.00, 0, true, 10, 'Disponible', NOW()),
-        (4, 'CHA-004', 'Chamarra Bomber Negra', 'Chamarra impermeable con forro térmico y cierres metálicos.', 4, 1, 450.00, 0, true, 0, 'Disponible', NOW()),
-        (5, 'VES-005', 'Vestido Floral de Verano', 'Vestido fresco con estampado floral y ajuste a la cintura.', 5, 1, 290.00, 0, true, 15, 'Disponible', NOW()),
-        (6, 'DEP-006', 'Conjunto Deportivo Tech Fleece', 'Buzo y polerón térmico transpirable para entrenamiento.', 6, 2, 350.00, 0, true, 0, 'Disponible', NOW()),
-        (7, 'TMU-REM-001', 'Remera Básica Algodón Montaño', 'Remera clásica de algodón peinado 100% boliviano.', 1, 1, 95.00, 0, true, 0, 'Disponible', NOW())
+        (1, 'POL-001', 'Polera Premium Algodón Pima', 'Polera suave de alta durabilidad, corte regular fit.', 1, 1, 120.00, 0, true, 0, 'Activo', NOW()),
+        (2, 'CAM-002', 'Camisa Oxford Slim Fit Celeste', 'Camisa clásica para oficina o eventos casuales.', 2, 1, 210.00, 0, true, 0, 'Activo', NOW()),
+        (3, 'CAN-101', 'Polerón Canguro Hoodie Urbano con Capucha', 'Polerón canguro con capucha ajustable y bolsillo delantero.', 1, 1, 180.00, 0, true, 0, 'Activo', NOW()),
+        (4, 'CHA-004', 'Chamarra Bomber Negra', 'Chamarra impermeable con forro térmico y cierres metálicos.', 4, 1, 450.00, 0, true, 0, 'Activo', NOW()),
+        (5, 'CAN-102', 'Sudadera Canguro Fleece Oversized Streetwear', 'Canguro oversize con forro térmico fleece suave para torso.', 1, 1, 195.00, 0, true, 0, 'Activo', NOW()),
+        (6, 'CAN-103', 'Canguro Deportivo Torso Zip-Hoodie Transpirable', 'Canguro deportivo con cierre frontal y capucha ergonómica.', 1, 1, 170.00, 0, true, 0, 'Activo', NOW()),
+        (7, 'TMU-REM-001', 'Remera Básica Algodón Montaño', 'Remera clásica de algodón peinado 100% boliviano.', 1, 1, 95.00, 0, true, 0, 'Activo', NOW())
       ON CONFLICT (id_producto) DO UPDATE SET 
         nombre = EXCLUDED.nombre,
         precio_base = EXCLUDED.precio_base,
@@ -705,9 +713,11 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       -- 11. Tiendas Tenants Iniciales
       INSERT INTO tiendas (id_tienda, nombre, slug, logo_url, telefono, nit, estado)
       VALUES
-        (1, 'Tiendas Montaño', 'tiendas-montano', '/logo.png', '78912345', '1029384756', 'Activa'),
+        (1, 'Tienda VRA', 'tienda-vra', '/logo.png', '78912345', '1029384756', 'Activa'),
         (2, 'Boutique Elegance & Moda', 'boutique-elegance', null, '71234567', '9876543210', 'Activa')
-      ON CONFLICT (id_tienda) DO NOTHING;
+      ON CONFLICT (id_tienda) DO UPDATE SET
+        nombre = EXCLUDED.nombre,
+        slug = EXCLUDED.slug;
 
       -- 12. Suscripciones Iniciales de Tiendas
       INSERT INTO suscripciones_tienda (id_suscripcion, id_tienda, id_plan, fecha_inicio, fecha_fin, dias_gracia, estado, monto_pagado, metodo_pago, codigo_comprobante)
@@ -742,5 +752,175 @@ export class DatabaseInitializerService implements OnApplicationBootstrap {
       SELECT setval('tiendas_id_tienda_seq', (SELECT COALESCE(MAX(id_tienda), 1) FROM tiendas));
       SELECT setval('suscripciones_tienda_id_suscripcion_seq', (SELECT COALESCE(MAX(id_suscripcion), 1) FROM suscripciones_tienda));
     `);
+  }
+
+  private async seedPolerasTorso() {
+    const poleras = [
+      {
+        codigo: 'POL-101',
+        nombre: 'Polera Básica Cuello Redondo Algodón Pima',
+        descripcion: 'Polera clásica de algodón pima 100% boliviano peinado de tacto ultra suave. Corte regular fit anatómico al torso con doble costura reforzada en cuello y hombros.',
+        precio_base: 85.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
+        colores: [2, 1, 4, 8],
+      },
+      {
+        codigo: 'POL-102',
+        nombre: 'Polera Oversized Torso Streetwear Boxy',
+        descripcion: 'Diseño urbano boxy fit con caída estructurada y hombros caídos que realzan la silueta del torso superior. Fabricada en algodón pesado 240 GSM de alta durabilidad.',
+        precio_base: 110.00,
+        descuento: 10,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
+        colores: [1, 2, 3, 7],
+      },
+      {
+        codigo: 'POL-103',
+        nombre: 'Polera Cuello en V Minimalista Regular',
+        descripcion: 'Escote en V discreto con terminación limpia en ribete fino. Confeccionada con algodón elástano que brinda ajuste y confort ergonómico al torso.',
+        precio_base: 89.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&auto=format&fit=crop&q=80',
+        colores: [1, 2, 4, 6],
+      },
+      {
+        codigo: 'POL-104',
+        nombre: 'Camiseta Deportiva Torso Dry-Fit Performance',
+        descripcion: 'Camiseta técnica para entrenamiento intensivo y running. Tejido transpirable microperforado de secado rápido con compresión ligera en torso y pecho.',
+        precio_base: 95.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&auto=format&fit=crop&q=80',
+        colores: [1, 4, 6, 8],
+      },
+      {
+        codigo: 'POL-105',
+        nombre: 'Polera Polo Piqué Clásica Cuello Camisero',
+        descripcion: 'Polera polo clásica en piqué de algodón doble hilado con cuello y puños acanalados indeformables. Tapeta frontal con dos botones nacarados.',
+        precio_base: 135.00,
+        descuento: 15,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1625910513413-7e1d53c30650?w=800&auto=format&fit=crop&q=80',
+        colores: [2, 4, 1, 10],
+      },
+      {
+        codigo: 'POL-106',
+        nombre: 'Polera Gráfica Urbana Street Art Edición Especial',
+        descripcion: 'Polera de torso gráfico con estampa artística frontal en serigrafía tacto cero de alta definición. Algodón premium prelavado anti-encogimiento.',
+        precio_base: 120.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&auto=format&fit=crop&q=80',
+        colores: [2, 1, 3, 9],
+      },
+      {
+        codigo: 'POL-107',
+        nombre: 'Polera Manga Larga Ribbed Torso Confort',
+        descripcion: 'Prenda de torso completo con mangas largas y puños elastizados en tejido canalé suave. Abrigada, elástica y perfecta para looks casuales de media estación.',
+        precio_base: 105.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=800&auto=format&fit=crop&q=80',
+        colores: [1, 8, 4, 7],
+      },
+      {
+        codigo: 'POL-108',
+        nombre: 'Musculosa Torso Gym Tank Top Algodón',
+        descripcion: 'Musculosa deportiva sin mangas con corte sisa ergonómico para libertad total de hombros y ventilación máxima del torso. 100% algodón rib elástico.',
+        precio_base: 75.00,
+        descuento: 5,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=800&auto=format&fit=crop&q=80',
+        colores: [1, 2, 8, 6],
+      },
+      {
+        codigo: 'POL-109',
+        nombre: 'Polera Henley Torso con Tapeta Rústica',
+        descripcion: 'Estilo Henley icónico con cuello redondo y cartera frontal de 3 botones estilo rústico. Tejido flamé transpirable de textura jaspeada.',
+        precio_base: 115.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80',
+        colores: [3, 8, 4, 7],
+      },
+      {
+        codigo: 'POL-110',
+        nombre: 'Polera Bicolor Raglán Torso Deportivo',
+        descripcion: 'Polera de corte raglán con mangas y cuello en contraste de color. Costuras planas antifricción y corte que destaca el ancho de hombros y torso.',
+        precio_base: 99.00,
+        descuento: 0,
+        destacado: true,
+        imagen: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=800&auto=format&fit=crop&q=80',
+        colores: [2, 8, 4, 1],
+      },
+    ];
+
+    const tallasRequeridas = [2, 3, 4, 5]; // S, M, L, XL
+    const sucursalesRes = (await this.dataSource.query("SELECT id_sucursal FROM sucursales WHERE LOWER(estado) = 'activa'")) as Array<{ id_sucursal: number }>;
+    const sucursales = sucursalesRes.map((r) => r.id_sucursal);
+
+    for (const p of poleras) {
+      const prodRes = (await this.dataSource.query(
+        `INSERT INTO productos (codigo, nombre, descripcion, id_categoria, id_temporada, precio_base, porcentaje_iva, destacado, descuento, estado, id_tienda, fecha_registro)
+         VALUES ($1, $2, $3, 1, 1, $4, 13.00, $5, $6, 'Activo', 1, NOW())
+         ON CONFLICT (codigo) DO UPDATE SET
+           nombre = EXCLUDED.nombre,
+           descripcion = EXCLUDED.descripcion,
+           precio_base = EXCLUDED.precio_base,
+           porcentaje_iva = 13.00,
+           destacado = EXCLUDED.destacado,
+           descuento = EXCLUDED.descuento,
+           estado = 'Activo',
+           id_tienda = 1
+         RETURNING id_producto`,
+        [p.codigo, p.nombre, p.descripcion, p.precio_base, p.destacado, p.descuento],
+      )) as Array<{ id_producto: number }>;
+
+      const idProducto = prodRes[0].id_producto;
+
+      await this.dataSource.query(
+        `DELETE FROM producto_imagenes WHERE id_producto = $1`,
+        [idProducto],
+      );
+      for (let i = 0; i < p.colores.length; i++) {
+        const idCol = p.colores[i];
+        let imgUrl = p.imagen;
+        if (idCol === 1) imgUrl = '/productos/polera-negra.png';
+        else if (idCol === 2) imgUrl = '/productos/polera-blanca.png';
+        else if (idCol === 4) imgUrl = '/productos/polera-azul.png';
+        else if (idCol === 8) imgUrl = '/productos/polera-gris.png';
+        await this.dataSource.query(
+          `INSERT INTO producto_imagenes (id_producto, id_color, url, orden, es_principal)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [idProducto, idCol, imgUrl, i + 1, i === 0],
+        );
+      }
+
+      for (const idTalla of tallasRequeridas) {
+        for (const idColor of p.colores) {
+          const ptcRes = (await this.dataSource.query(
+            `INSERT INTO producto_talla_color (id_producto, id_talla, id_color, estado_stock)
+             VALUES ($1, $2, $3, 'Disponible')
+             ON CONFLICT (id_producto, id_talla, id_color) DO UPDATE SET estado_stock = 'Disponible'
+             RETURNING id_ptc`,
+            [idProducto, idTalla, idColor],
+          )) as Array<{ id_ptc: number }>;
+
+          const idPtc = ptcRes[0].id_ptc;
+
+          for (const idSuc of sucursales) {
+            await this.dataSource.query(
+              `INSERT INTO inventario_stock (id_ptc, id_sucursal, cantidad_disponible, cantidad_reservada, cantidad_vendida, stock_minimo_alert)
+               VALUES ($1, $2, 25, 0, 2, 5)
+               ON CONFLICT (id_ptc, id_sucursal) DO UPDATE SET cantidad_disponible = GREATEST(inventario_stock.cantidad_disponible, 20)`,
+              [idPtc, idSuc],
+            );
+          }
+        }
+      }
+    }
   }
 }

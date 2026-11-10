@@ -16,6 +16,10 @@ export class RegistroRequest {
   @IsString()
   @MaxLength(30, { message: 'El teléfono no debe superar 30 caracteres.' })
   telefono?: string;
+
+  @IsOptional()
+  @IsString()
+  token_invitado?: string;
 }
 
 export class RegistroResponse {
@@ -23,4 +27,14 @@ export class RegistroResponse {
   usuario_id!: number;
   confirmacion_email: string = 'enviado';
   warning?: string;
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  usuario?: {
+    id: number;
+    nombre: string | null;
+    email: string;
+    rol: string | null;
+    permisos: unknown[];
+  };
 }

@@ -243,15 +243,29 @@ export class SucursalesService {
     return { detail: `Ciudad ${estadoNuevo === 'Inactiva' ? 'inhabilitada' : 'reactivada'}.` };
   }
 
+  async listarActivas(): Promise<Array<{ id_sucursal: number; nombre: string; direccion: string; ciudad: string | null; es_central: boolean }>> {
+    const filas = (await this.dataSource.query(
+      `SELECT s.id_sucursal, s.nombre, s.direccion, c.nombre AS ciudad, COALESCE(s.es_central, false) AS es_central
+       FROM sucursales s
+       LEFT JOIN ciudades c ON c.id_ciudad = s.id_ciudad
+       WHERE LOWER(s.estado) = 'activa'
+       ORDER BY s.es_central DESC, s.id_sucursal ASC`,
+    )) as Array<{ id_sucursal: number; nombre: string; direccion: string; ciudad: string | null; es_central: boolean }>;
+    return filas;
+  }
+
   async listarSucursales(usuario: Usuario): Promise<SucursalItem[]> {
     await this.exigirPermiso(usuario);
 
-    const filas: Array<Sucursal & { nombre_ciudad: string | null }> = await this.dataSource.query(
+    const filas: Array<Sucursal & { nombre_ciudad: string | null; es_central?: boolean; id_tienda?: number }> = await this.dataSource.query(
       `SELECT s.id_sucursal, s.nombre, s.direccion, s.id_ciudad, s.telefono, s.estado, s.fecha_registro,
+              COALESCE(s.es_central, false) AS es_central, s.id_tienda,
               c.nombre AS nombre_ciudad
        FROM sucursales s
        LEFT JOIN ciudades c ON c.id_ciudad = s.id_ciudad
-       ORDER BY s.nombre ASC`,
+       WHERE ($1::int IS NULL OR s.id_tienda = $1 OR s.id_tienda = 1)
+       ORDER BY s.es_central DESC, s.nombre ASC`,
+      [usuario.id_tienda ?? 1],
     );
 
     return filas.map((f) => ({
@@ -262,6 +276,8 @@ export class SucursalesService {
       nombre_ciudad: f.nombre_ciudad,
       telefono: f.telefono,
       estado: f.estado,
+      es_central: Boolean(f.es_central),
+      id_tienda: f.id_tienda,
       fecha_registro: new Date(f.fecha_registro).toISOString(),
     }));
   }

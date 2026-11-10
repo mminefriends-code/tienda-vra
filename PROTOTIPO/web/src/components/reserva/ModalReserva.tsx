@@ -123,7 +123,7 @@ export function ModalReserva({ abierto, producto, inicial, onCerrar }: Props) {
 
   const tallas = useMemo(() => [...new Set(variantes.map((v) => v.talla))], [variantes]);
   const colores = useMemo(
-    () => [...new Set(variantes.filter((v) => v.talla === talla).map((v) => v.color))],
+    () => [...new Set(variantes.filter((v) => !talla || v.talla === talla).map((v) => v.color))],
     [variantes, talla],
   );
 
@@ -322,12 +322,17 @@ export function ModalReserva({ abierto, producto, inicial, onCerrar }: Props) {
                     className={cn(inputBase, errores.variante ? 'border-danger-400' : 'border-ink-200')}
                     value={talla}
                     onChange={(e) => cambiarTalla(e.target.value)}
+                    disabled={tallas.length === 0}
                   >
-                    {tallas.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
+                    {tallas.length === 0 ? (
+                      <option value="">Sin tallas</option>
+                    ) : (
+                      tallas.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div>
@@ -339,12 +344,17 @@ export function ModalReserva({ abierto, producto, inicial, onCerrar }: Props) {
                       setColor(e.target.value);
                       setErrores((prev) => ({ ...prev, variante: undefined }));
                     }}
+                    disabled={colores.length === 0}
                   >
-                    {colores.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
+                    {colores.length === 0 ? (
+                      <option value="">Sin colores</option>
+                    ) : (
+                      colores.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>

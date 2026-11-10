@@ -50,6 +50,11 @@ export class CatalogoController {
     return this.catalogoService.opcionesFiltros();
   }
 
+  @Get('publico/sucursales')
+  listarSucursales() {
+    return this.catalogoService.listarSucursalesActivas();
+  }
+
   @Get('publico/:codigo')
   async consultarDetalle(@Param('codigo') codigo: string) {
     return this.catalogoService.consultarDisponibilidad(codigo);

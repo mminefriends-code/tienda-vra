@@ -347,7 +347,7 @@ export class ComprobantesService {
       [usuario.id_usuario],
     )) as Array<{ id_cliente: number }>;
     if (!cliente) {
-      throw new NotFoundException('Ventas no encontradas.');
+      return [];
     }
     return (await this.dataSource.query(
       `SELECT v.id_venta, v.id_sucursal, v.modalidad, v.metodo_pago, v.subtotal, v.impuestos,

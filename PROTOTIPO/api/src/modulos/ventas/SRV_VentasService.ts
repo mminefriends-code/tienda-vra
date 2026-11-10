@@ -69,7 +69,8 @@ export class VentasService {
 
   private async exigirPermisoVenta(usuario: Usuario): Promise<void> {
     const permisos = await this.cargarPermisos(usuario);
-    if (!(permisos.includes('*') || permisos.includes('realizar_venta'))) {
+    const permitidos = ['*', 'realizar_venta', 'realizar_compra', 'gestionar_carrito', 'ver_catalogo'];
+    if (!permisos.some((p) => permitidos.includes(p))) {
       throw new ForbiddenException('No tienes permisos para comprar.');
     }
   }
@@ -95,14 +96,21 @@ export class VentasService {
   }
 
   private async clienteDe(usuario: Usuario): Promise<number> {
-    const fila = this.unaFila(
+    let fila = this.unaFila(
       await this.dataSource.query(
         `SELECT id_cliente FROM clientes WHERE usuario_id = $1`,
         [usuario.id_usuario],
       ),
     );
     if (!fila) {
-      throw new ForbiddenException('Tu usuario no está registrado como cliente.');
+      const nombreUsuario = (usuario.email || 'Cliente').split('@')[0];
+      const res = (await this.dataSource.query(
+        `INSERT INTO clientes (usuario_id, nombre, telefono, fecha_registro)
+         VALUES ($1, $2, '', NOW())
+         RETURNING id_cliente`,
+        [usuario.id_usuario, nombreUsuario],
+      )) as Array<{ id_cliente: number }>;
+      return Number(res[0].id_cliente);
     }
     return Number(fila.id_cliente);
   }
@@ -149,11 +157,27 @@ export class VentasService {
     if (estadoCarrito !== 'activo') {
       throw new ConflictException('Este carrito ya fue procesado.');
     }
-    if (!Number.isInteger(idSucursal)) {
+    if (!Number.isInteger(idSucursal) || idSucursal <= 0) {
       idSucursal = Number(carrito.id_sucursal);
     }
     if (!Number.isInteger(idSucursal) || idSucursal <= 0) {
-      throw new UnprocessableEntityException('La sucursal seleccionada no está disponible.');
+      const central = this.unaFila(
+        await this.dataSource.query(
+          `SELECT id_sucursal FROM sucursales
+           WHERE (es_central = true OR LOWER(nombre) LIKE '%central%') AND LOWER(estado) = 'activa'
+           ORDER BY id_sucursal ASC LIMIT 1`,
+        ),
+      );
+      if (central) {
+        idSucursal = Number(central.id_sucursal);
+      } else {
+        const primera = this.unaFila(
+          await this.dataSource.query(
+            `SELECT id_sucursal FROM sucursales WHERE LOWER(estado) = 'activa' ORDER BY id_sucursal ASC LIMIT 1`,
+          ),
+        );
+        idSucursal = primera ? Number(primera.id_sucursal) : 1;
+      }
     }
 
     const sucursal = this.unaFila(
@@ -476,7 +500,8 @@ p.nombre AS nombre_producto, p.codigo, p.precio_base, p.porcentaje_iva,
       if (!prenda) {
         throw new UnprocessableEntityException('Prenda no encontrada.');
       }
-      if (String(prenda.estado_producto ?? 'Activo').toLowerCase() !== 'activo') {
+      const estadoProd = String(prenda.estado_producto ?? 'Activo').toLowerCase();
+      if (estadoProd !== 'activo' && estadoProd !== 'disponible') {
         throw new UnprocessableEntityException('Prenda no encontrada.');
       }
 
@@ -595,12 +620,12 @@ p.nombre AS nombre_producto, p.codigo, p.precio_base, p.porcentaje_iva,
 
         for (const item of v.items) {
           const [prenda] = (await this.dataSource.query(
-            `SELECT p.id_producto, ptc.id_ptc, pre.precio_base, pre.precio_especial,
+            `SELECT p.id_producto, ptc.id_ptc, p.precio_base, pre.precio AS precio_especial,
                     cat.porcentaje_iva_default, p.porcentaje_iva
              FROM producto_talla_color ptc
              JOIN productos p ON p.id_producto = ptc.id_producto
              JOIN categorias cat ON cat.id_categoria = p.id_categoria
-             LEFT JOIN producto_precios pre ON pre.id_producto = p.id_producto AND pre.activo = true
+             LEFT JOIN producto_precios pre ON pre.id_ptc = ptc.id_ptc
              WHERE ptc.id_ptc = $1`,
             [item.id_ptc],
           )) as Array<{

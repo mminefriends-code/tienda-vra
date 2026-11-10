@@ -64,6 +64,9 @@ export class Usuario {
   @Column({ name: 'ultimo_login', type: 'timestamp', nullable: true })
   ultimo_login: Date | null;
 
+  @Column({ name: 'id_tienda', type: 'int', nullable: true, default: 1 })
+  id_tienda?: number | null;
+
   @OneToMany(() => UsuarioRol, (ur) => ur.usuario, { cascade: ['remove'] })
   roles: UsuarioRol[];
 
@@ -81,11 +84,11 @@ export class Usuario {
   }
 
   get nombre(): string | null {
-    if (this.cliente) {
-      return this.cliente.nombre;
-    }
     if (this.empleado) {
       return this.empleado.nombre;
+    }
+    if (this.cliente) {
+      return this.cliente.nombre;
     }
     return null;
   }
@@ -145,6 +148,12 @@ export class Sucursal {
 
   @Column({ name: 'estado', type: 'varchar', length: 20, default: 'Activa' })
   estado: string;
+
+  @Column({ name: 'es_central', type: 'boolean', default: false })
+  es_central?: boolean;
+
+  @Column({ name: 'id_tienda', type: 'int', nullable: true, default: 1 })
+  id_tienda?: number | null;
 
   @CreateDateColumn({ name: 'fecha_registro', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fecha_registro: Date;

@@ -30,8 +30,8 @@ const ESTADO_COLORES: Record<string, string> = {
 };
 
 const TABLAS: Record<'ciudades' | 'sucursales', { titulo: string; descripcion: string }> = {
-  ciudades: { titulo: 'Ciudades', descripcion: 'Estructura la red por ciudad y departamento.' },
-  sucursales: { titulo: 'Sucursales', descripcion: 'Registra las tiendas físicas por ciudad.' },
+  ciudades: { titulo: 'Ciudades', descripcion: 'Estructura la red geográfica por ciudad y departamento.' },
+  sucursales: { titulo: 'Tiendas & Sucursales', descripcion: 'Gestiona la Casa Matriz / Tienda General y los puntos de retiro físico de tu negocio.' },
 };
 
 function Toast({ mensaje, tipo, onClose }: { mensaje: string; tipo: 'exito' | 'error'; onClose: () => void }) {
@@ -647,6 +647,11 @@ export function Sucursales() {
                         <div className="flex items-center gap-2">
                           <Store size={15} className="text-ink-400" />
                           <span className="font-medium text-ink-800">{s.nombre}</span>
+                          {s.es_central && (
+                            <span className="rounded-md bg-brand-50 px-2 py-0.5 text-[10px] font-black text-brand-700 border border-brand-200">
+                              Casa Matriz / Central
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3">

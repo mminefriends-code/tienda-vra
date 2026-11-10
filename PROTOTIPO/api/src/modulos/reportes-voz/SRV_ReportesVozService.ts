@@ -237,6 +237,10 @@ export class ReportesVozService {
         desde = new Date(ayer); desde.setHours(0, 0, 0, 0);
         hasta = new Date(ayer); hasta.setHours(23, 59, 59, 999);
       }
+    } else if (tipo === 'ventas') {
+      // Por defecto para ventas: el mes actual
+      desde = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+      hasta = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
     }
 
     const fechaMatch = t.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
@@ -256,9 +260,11 @@ export class ReportesVozService {
       if (fila) id_sucursal = fila.id_sucursal;
     }
 
-    const confirmacion = !id_sucursal || !desde || !hasta;
+    // Si el usuario pide generar o descargar expresamente, no pedir confirmación redundante
+    const pideGenerarDirecto = /(generar|descargar|exportar|completo|dossier|hoja|si|sí|confirmar|crear|reporte|inventario|ventas)/i.test(t);
+    const confirmacion = !pideGenerarDirecto;
 
-    return { tipo, desde, hasta, id_sucursal, formato: 'pdf', confirmacion };
+    return { tipo, desde, hasta, id_sucursal, formato, confirmacion };
   }
 
   private generarPreguntaConfirmacion(i: Intencion): string {
@@ -267,12 +273,12 @@ export class ReportesVozService {
     if (i.id_sucursal) {
       partes.push(`de la sucursal ${i.id_sucursal}`);
     } else {
-      partes.push('(falta sucursal)');
+      partes.push('(todas las sucursales)');
     }
     if (i.desde && i.hasta) {
       partes.push(`del ${i.desde.toLocaleDateString()} al ${i.hasta.toLocaleDateString()}`);
     } else {
-      partes.push('(falta período)');
+      partes.push('(período actual)');
     }
     partes.push(`en ${i.formato?.toUpperCase() ?? 'PDF'}?`);
     return partes.join(' ') + ' Responde "Sí" para confirmar.';
@@ -281,9 +287,7 @@ export class ReportesVozService {
   private validarParametros(i: Intencion): void {
     if (!['ventas', 'inventario', 'disponibilidad'].includes(i.tipo)) throw new UnprocessableEntityException('Tipo de reporte inválido.');
     if (!['pdf', 'xlsx', 'csv'].includes(i.formato ?? 'pdf')) throw new UnprocessableEntityException('Formato inválido (pdf, xlsx, csv).');
-    if (!i.id_sucursal) throw new UnprocessableEntityException('Sucursal no encontrada.');
-    if (!i.desde || !i.hasta) throw new UnprocessableEntityException('Período no definido.');
-    if (i.desde > i.hasta) throw new UnprocessableEntityException('El rango de fechas es inválido.');
+    if (i.desde && i.hasta && i.desde > i.hasta) throw new UnprocessableEntityException('El rango de fechas es inválido.');
   }
 
   private async generarReporte(i: Intencion): Promise<{ archivoBuffer: Buffer; nombreArchivo: string; resumen: string }> {
@@ -291,9 +295,13 @@ export class ReportesVozService {
     let columnas: string[] = [];
     let resumen = '';
 
+    const ahora = new Date();
+    const fechaDesde = i.desde ?? new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const fechaHasta = i.hasta ?? new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59, 999);
+
     if (i.tipo === 'ventas') {
       const query = `
-        SELECT v.id_venta, v.fecha, s.nombre AS sucursal, c.nombre AS cliente,
+        SELECT v.id_venta, v.fecha_venta AS fecha, s.nombre AS sucursal, c.nombre AS cliente,
                vi.cantidad, vi.precio_unitario, (vi.cantidad * vi.precio_unitario) AS subtotal,
                p.nombre AS producto, t.nombre AS talla, co.nombre AS color
         FROM ventas v
@@ -304,10 +312,10 @@ export class ReportesVozService {
         JOIN productos p ON p.id_producto = ptc.id_producto
         JOIN tallas t ON t.id_talla = ptc.id_talla
         JOIN colores co ON co.id_color = ptc.id_color
-        WHERE v.id_sucursal = $1 AND v.fecha BETWEEN $2 AND $3
-        ORDER BY v.fecha DESC
+        WHERE ($1::int IS NULL OR v.id_sucursal = $1) AND v.fecha_venta BETWEEN $2 AND $3
+        ORDER BY v.fecha_venta DESC
       `;
-      filas = await this.dataSource.query(query, [i.id_sucursal, i.desde, i.hasta]);
+      filas = await this.dataSource.query(query, [i.id_sucursal ?? null, fechaDesde, fechaHasta]);
       columnas = ['id_venta', 'fecha', 'sucursal', 'cliente', 'cantidad', 'precio_unitario', 'subtotal', 'producto', 'talla', 'color'];
       const total = filas.reduce((s, f) => s + Number(f.subtotal ?? 0), 0);
       resumen = `Reporte de ventas: ${filas.length} registros, total Bs ${total.toFixed(2)}`;
@@ -323,12 +331,12 @@ export class ReportesVozService {
         JOIN tallas t ON t.id_talla = ptc.id_talla
         JOIN colores co ON co.id_color = ptc.id_color
         JOIN sucursales s ON s.id_sucursal = inv.id_sucursal
-        WHERE inv.id_sucursal = $1
+        WHERE ($1::int IS NULL OR inv.id_sucursal = $1)
         ORDER BY p.nombre, t.nombre, co.nombre
       `;
-      filas = await this.dataSource.query(query, [i.id_sucursal]);
+      filas = await this.dataSource.query(query, [i.id_sucursal ?? null]);
       columnas = ['codigo', 'producto', 'categoria', 'talla', 'color', 'codigo_hex', 'cantidad_disponible', 'cantidad_vendida', 'sucursal'];
-      resumen = `Reporte de inventario: ${filas.length} combinaciones en sucursal ${i.id_sucursal}`;
+      resumen = `Reporte de inventario: ${filas.length} combinaciones registradas`;
     } else if (i.tipo === 'disponibilidad') {
       const query = `
         SELECT p.codigo, p.nombre AS producto, cat.nombre AS categoria, t.nombre AS talla,
@@ -341,12 +349,12 @@ export class ReportesVozService {
         JOIN tallas t ON t.id_talla = ptc.id_talla
         JOIN colores co ON co.id_color = ptc.id_color
         JOIN sucursales s ON s.id_sucursal = inv.id_sucursal
-        WHERE inv.id_sucursal = $1 AND inv.cantidad_disponible > 0
+        WHERE ($1::int IS NULL OR inv.id_sucursal = $1) AND inv.cantidad_disponible > 0
         ORDER BY p.nombre, t.nombre, co.nombre
       `;
-      filas = await this.dataSource.query(query, [i.id_sucursal]);
+      filas = await this.dataSource.query(query, [i.id_sucursal ?? null]);
       columnas = ['codigo', 'producto', 'categoria', 'talla', 'color', 'codigo_hex', 'cantidad_disponible', 'sucursal'];
-      resumen = `Disponibilidad: ${filas.length} variantes con stock en sucursal ${i.id_sucursal}`;
+      resumen = `Disponibilidad: ${filas.length} variantes con existencias activas`;
     }
 
     if (filas.length === 0) {
@@ -355,7 +363,7 @@ export class ReportesVozService {
 
     let archivoBuffer: Buffer;
     const formato = i.formato ?? 'pdf';
-    const nombreArchivo = `reporte_${i.tipo}_suc${i.id_sucursal}_${Date.now()}.${formato}`;
+    const nombreArchivo = `reporte_${i.tipo}_suc${i.id_sucursal ?? 'general'}_${Date.now()}.${formato}`;
 
     if (formato === 'pdf') {
       archivoBuffer = await this.generarPDF(filas, columnas, resumen);

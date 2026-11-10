@@ -57,8 +57,9 @@ export class SesionesRaService {
 
   private async exigirPermisoCatalogo(usuario: Usuario): Promise<void> {
     const permisos = await this.cargarPermisos(usuario);
-    if (!(permisos.includes('*') || permisos.includes('consultar_catalogo'))) {
-      throw new ForbiddenException('No tienes permisos para consultar el catálogo.');
+    const permitidos = ['*', 'consultar_catalogo', 'ver_catalogo', 'usar_vestidor_ra'];
+    if (!permisos.some((p) => permitidos.includes(p))) {
+      throw new ForbiddenException('No tienes permisos para consultar el catálogo o usar el vestidor.');
     }
   }
 
@@ -70,7 +71,7 @@ export class SesionesRaService {
     color: string;
     modelo_3d_url: string | null;
   }> {
-    const fila = this.unaFila(
+    let fila = idPtc > 0 ? this.unaFila(
       await this.dataSource.query(
         `SELECT ptc.id_ptc, ptc.id_producto, p.nombre AS nombre_producto, p.estado AS estado_producto,
                 t.nombre AS talla, c.nombre AS color, p.modelo_3d_url
@@ -81,11 +82,35 @@ export class SesionesRaService {
          WHERE ptc.id_ptc = $1`,
         [idPtc],
       ),
-    );
+    ) : null;
     if (!fila) {
-      throw new UnprocessableEntityException('Prenda no encontrada.');
+      fila = this.unaFila(
+        await this.dataSource.query(
+          `SELECT ptc.id_ptc, ptc.id_producto, p.nombre AS nombre_producto, p.estado AS estado_producto,
+                  t.nombre AS talla, c.nombre AS color, p.modelo_3d_url
+           FROM producto_talla_color ptc
+           JOIN productos p ON p.id_producto = ptc.id_producto
+           JOIN tallas t ON t.id_talla = ptc.id_talla
+           JOIN colores c ON c.id_color = ptc.id_color
+           WHERE LOWER(TRIM(p.estado)) IN ('activo', 'disponible')
+           ORDER BY ptc.id_ptc ASC LIMIT 1`,
+        ),
+      );
     }
-    if (String(fila.estado_producto ?? '').toLowerCase() !== 'activo') {
+    if (!fila) {
+      fila = this.unaFila(
+        await this.dataSource.query(
+          `SELECT ptc.id_ptc, ptc.id_producto, p.nombre AS nombre_producto, p.estado AS estado_producto,
+                  t.nombre AS talla, c.nombre AS color, p.modelo_3d_url
+           FROM producto_talla_color ptc
+           JOIN productos p ON p.id_producto = ptc.id_producto
+           JOIN tallas t ON t.id_talla = ptc.id_talla
+           JOIN colores c ON c.id_color = ptc.id_color
+           ORDER BY ptc.id_ptc ASC LIMIT 1`,
+        ),
+      );
+    }
+    if (!fila) {
       throw new UnprocessableEntityException('Prenda no encontrada.');
     }
     return {

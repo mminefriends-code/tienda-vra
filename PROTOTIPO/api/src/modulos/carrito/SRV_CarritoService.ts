@@ -69,7 +69,8 @@ export class CarritoService {
 
   private async exigirPermisoVenta(usuario: Usuario): Promise<void> {
     const permisos = await this.cargarPermisos(usuario);
-    if (!(permisos.includes('*') || permisos.includes('realizar_venta'))) {
+    const permitidos = ['*', 'realizar_venta', 'realizar_compra', 'gestionar_carrito', 'ver_catalogo'];
+    if (!permisos.some((p) => permitidos.includes(p))) {
       throw new ForbiddenException('No tienes permisos para comprar.');
     }
   }
@@ -90,13 +91,7 @@ export class CarritoService {
           [usuario.id_usuario],
         ),
       );
-      if (existente) {
-        return {
-          id_carrito: Number(existente.id_carrito),
-          id_sucursal: Number(existente.id_sucursal),
-          token_invitado: null,
-        };
-      }
+
       const carritoInvitado = credenciales.tokenInvitado
         ? this.unaFila(
             await this.dataSource.query(
@@ -109,6 +104,32 @@ export class CarritoService {
             ),
           )
         : undefined;
+
+      if (existente && carritoInvitado && existente.id_carrito !== carritoInvitado.id_carrito) {
+        await this.dataSource.query(
+          `INSERT INTO carrito_items (id_carrito, id_ptc, cantidad, precio_unitario, fecha_agregado)
+           SELECT $1, ci.id_ptc, ci.cantidad, ci.precio_unitario, ci.fecha_agregado
+           FROM carrito_items ci
+           WHERE ci.id_carrito = $2
+           ON CONFLICT (id_carrito, id_ptc) DO UPDATE SET cantidad = carrito_items.cantidad + EXCLUDED.cantidad`,
+          [existente.id_carrito, carritoInvitado.id_carrito],
+        );
+        await this.dataSource.query(`DELETE FROM carritos WHERE id_carrito = $1`, [carritoInvitado.id_carrito]);
+        return {
+          id_carrito: Number(existente.id_carrito),
+          id_sucursal: Number(existente.id_sucursal),
+          token_invitado: null,
+        };
+      }
+
+      if (existente) {
+        return {
+          id_carrito: Number(existente.id_carrito),
+          id_sucursal: Number(existente.id_sucursal),
+          token_invitado: null,
+        };
+      }
+
       if (carritoInvitado) {
         await this.dataSource.query(
           `UPDATE carritos
@@ -200,7 +221,8 @@ export class CarritoService {
     if (!fila) {
       throw new UnprocessableEntityException('Prenda no encontrada.');
     }
-    if (String(fila.estado_producto ?? '').toLowerCase() !== 'activo') {
+    const estadoProd = String(fila.estado_producto ?? '').toLowerCase();
+    if (estadoProd !== 'activo' && estadoProd !== 'disponible') {
       throw new UnprocessableEntityException('Prenda no encontrada.');
     }
     return {
@@ -619,13 +641,17 @@ export class CarritoService {
     if (!vinculado) {
       throw new NotFoundException('El ítem del carrito no existe o no pertenece a tu carrito.');
     }
-    const prenda = await this.validarPrenda(
-      Number(this.unaFila(
-        await this.dataSource.query(
-          `SELECT id_ptc FROM carrito_items WHERE id_carrito_item = $1`,
-          [vinculado.id_carrito_item],
-        ),
-      )?.id_ptc),
+    const itemInfo = this.unaFila(
+      await this.dataSource.query(
+        `SELECT ci.id_ptc, p.nombre, t.nombre as talla, c.nombre as color
+         FROM carrito_items ci
+         LEFT JOIN producto_talla_color ptc ON ptc.id_ptc = ci.id_ptc
+         LEFT JOIN productos p ON p.id_producto = ptc.id_producto
+         LEFT JOIN tallas t ON t.id_talla = ptc.id_talla
+         LEFT JOIN colores c ON c.id_color = ptc.id_color
+         WHERE ci.id_carrito_item = $1`,
+        [vinculado.id_carrito_item],
+      ),
     );
     await this.dataSource.query(
       `DELETE FROM carrito_items WHERE id_carrito_item = $1`,
@@ -635,15 +661,55 @@ export class CarritoService {
       idUsuario,
       'DELETE',
       'carrito_items',
-      `${prenda.nombre} (${prenda.talla}, ${prenda.color}) eliminada del carrito.`,
+      `${itemInfo?.nombre ?? 'Prenda'} (${itemInfo?.talla ?? ''}, ${itemInfo?.color ?? ''}) eliminada del carrito.`,
       request,
       vinculado.id_carrito_item,
-      { id_ptc: prenda.id_ptc },
+      { id_ptc: itemInfo?.id_ptc },
       null,
     );
 
     const subtotal = await this.recalcularSubtotal(vinculado.id_carrito);
     const items = await this.cargarItems(vinculado.id_carrito);
     return this.armarCarrito(vinculado.id_carrito, vinculado.id_sucursal, items, subtotal);
+  }
+
+  async vaciarCarrito(
+    credenciales: CredencialesCarrito,
+    request: Request,
+  ): Promise<Record<string, unknown>> {
+    const idUsuario = credenciales.usuario?.id_usuario ?? null;
+    let carrito: Fila | undefined;
+    if (idUsuario != null) {
+      carrito = this.unaFila(
+        await this.dataSource.query(
+          `SELECT id_carrito, id_sucursal FROM carritos WHERE id_usuario = $1 AND LOWER(estado) = 'activo' ORDER BY fecha_creacion DESC LIMIT 1`,
+          [idUsuario],
+        ),
+      );
+    } else if (credenciales.tokenInvitado) {
+      carrito = this.unaFila(
+        await this.dataSource.query(
+          `SELECT id_carrito, id_sucursal FROM carritos WHERE token_invitado = $1 AND LOWER(estado) = 'activo' ORDER BY fecha_creacion DESC LIMIT 1`,
+          [credenciales.tokenInvitado],
+        ),
+      );
+    }
+
+    if (!carrito) {
+      return this.armarCarrito(0, 1, [], 0);
+    }
+
+    const idCarrito = Number(carrito.id_carrito);
+    await this.dataSource.query(`DELETE FROM carrito_items WHERE id_carrito = $1`, [idCarrito]);
+
+    await this.bitacoraService.registrar(
+      idUsuario,
+      'DELETE',
+      'carrito_items',
+      `Carrito #${idCarrito} vaciado por completo.`,
+      request,
+    );
+
+    return this.armarCarrito(idCarrito, Number(carrito.id_sucursal ?? 1), [], 0);
   }
 }

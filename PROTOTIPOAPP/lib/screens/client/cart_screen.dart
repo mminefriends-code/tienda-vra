@@ -40,7 +40,7 @@ class _ClientCartScreenState extends State<ClientCartScreen> {
 
     final newOrder = {
       'id_offline_temporal': 'MOB-OFF-${DateTime.now().millisecondsSinceEpoch}',
-      'items': cart.items.map((i) => {'id_ptc': i.id, 'cantidad': i.cantidad}).toList(),
+      'items': cart.items.map((i) => {'id_ptc': i.idPtc > 0 ? i.idPtc : i.id, 'cantidad': i.cantidad}).toList(),
       'metodo_pago': 'QR',
       'fecha_offline': DateTime.now().toIso8601String(),
       'total': cart.totalAmount,

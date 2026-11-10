@@ -361,4 +361,15 @@ export class CatalogoService {
     ]);
     return { categorias, tallas, colores, temporadas };
   }
+
+  async listarSucursalesActivas(): Promise<Array<{ id_sucursal: number; nombre: string; direccion: string; ciudad: string | null; es_central: boolean }>> {
+    const filas = (await this.dataSource.query(
+      `SELECT s.id_sucursal, s.nombre, s.direccion, c.nombre AS ciudad, COALESCE(s.es_central, false) AS es_central
+       FROM sucursales s
+       LEFT JOIN ciudades c ON c.id_ciudad = s.id_ciudad
+       WHERE LOWER(s.estado) = 'activa'
+       ORDER BY s.es_central DESC, s.id_sucursal ASC`,
+    )) as Array<{ id_sucursal: number; nombre: string; direccion: string; ciudad: string | null; es_central: boolean }>;
+    return filas;
+  }
 }

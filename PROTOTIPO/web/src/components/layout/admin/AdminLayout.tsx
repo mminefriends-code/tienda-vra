@@ -126,7 +126,7 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-extrabold leading-tight text-ink-900">
-            {tiendaInfo?.nombre || 'Tiendas Montaño'}
+            {tiendaInfo?.nombre || 'Tienda VRA'}
           </p>
           <div className="mt-0.5 flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
@@ -260,12 +260,16 @@ function SidebarBody({ alNavegar }: { alNavegar: () => void }) {
 }
 
 export function AdminLayout() {
-  const { token } = useAuth();
+  const { token, usuario } = useAuth();
   const [abierto, setAbierto] = useState(false);
   const { paquete, item } = useContextoMenu();
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (usuario && usuario.rol === 'Cliente') {
+    return <Navigate to="/" replace />;
   }
 
   return (

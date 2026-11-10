@@ -8,14 +8,14 @@ export class EmailService {
   constructor(private readonly config: ConfigService) {}
 
   enviarBienvenida(email: string, token: string): boolean {
-    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendasmontano.com');
+    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendavra.bo');
     const url = `${baseUrl}/confirmar-cuenta?token=${token}`;
 
     const emailEnabled = String(this.config.get<string>('EMAIL_ENABLED', 'false')).toLowerCase() === 'true';
 
     if (!emailEnabled) {
       this.logger.log(`[EMAIL SIMULADO] Para: ${email}`);
-      this.logger.log('[EMAIL SIMULADO] Asunto: Bienvenido a Tiendas Montaño — confirma tu cuenta');
+      this.logger.log('[EMAIL SIMULADO] Asunto: Bienvenido a Tienda VRA — confirma tu cuenta');
       this.logger.log(`[EMAIL SIMULADO] Enlace: ${url}`);
       return true;
     }
@@ -30,14 +30,14 @@ export class EmailService {
   }
 
   enviarPrimeraContrasena(email: string, token: string): boolean {
-    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendasmontano.com');
+    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendavra.bo');
     const url = `${baseUrl}/establecer-contraseña?token=${token}`;
 
     const emailEnabled = String(this.config.get<string>('EMAIL_ENABLED', 'false')).toLowerCase() === 'true';
 
     if (!emailEnabled) {
       this.logger.log(`[EMAIL SIMULADO] Para: ${email}`);
-      this.logger.log('[EMAIL SIMULADO] Asunto: Tiendas Montaño — establece tu contraseña');
+      this.logger.log('[EMAIL SIMULADO] Asunto: Tienda VRA — establece tu contraseña');
       this.logger.log(`[EMAIL SIMULADO] Enlace: ${url}`);
       return true;
     }
@@ -52,14 +52,14 @@ export class EmailService {
   }
 
   enviarRecuperacionContrasena(email: string, token: string): boolean {
-    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendasmontano.com');
+    const baseUrl = this.config.get<string>('EMAIL_BASE_URL', 'https://tiendavra.bo');
     const url = `${baseUrl}/restablecer-contraseña?token=${token}`;
 
     const emailEnabled = String(this.config.get<string>('EMAIL_ENABLED', 'false')).toLowerCase() === 'true';
 
     if (!emailEnabled) {
       this.logger.log(`[EMAIL SIMULADO] Para: ${email}`);
-      this.logger.log('[EMAIL SIMULADO] Asunto: Restablece tu contraseña en Tiendas Montaño');
+      this.logger.log('[EMAIL SIMULADO] Asunto: Restablece tu contraseña en Tienda VRA');
       this.logger.log(`[EMAIL SIMULADO] Enlace: ${url}`);
       return true;
     }

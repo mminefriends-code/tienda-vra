@@ -75,7 +75,8 @@ export class PagosService {
 
   private async exigirPermisoPagar(usuario: Usuario): Promise<void> {
     const permisos = await this.cargarPermisos(usuario);
-    if (!(permisos.includes('*') || permisos.includes('realizar_venta'))) {
+    const permitidos = ['*', 'realizar_venta', 'realizar_compra'];
+    if (!permisos.some((p) => permitidos.includes(p))) {
       throw new ForbiddenException('No tienes permisos para realizar pagos.');
     }
   }
@@ -333,12 +334,20 @@ export class PagosService {
 
         await em.query(`UPDATE ventas SET estado = 'Completada' WHERE id_venta = $1`, [idVenta]);
 
+        if (lockVenta.id_carrito != null) {
+          await em.query(
+            `UPDATE carritos SET estado = 'Convertido a venta' WHERE id_carrito = $1`,
+            [lockVenta.id_carrito],
+          );
+        }
+
         for (const item of stocks) {
           const cantidad = Number(item.cantidad ?? 0);
           if (cantidad <= 0) continue;
           await em.query(
             `UPDATE inventario_stock
-             SET cantidad_vendida = cantidad_vendida + $2
+             SET cantidad_disponible = GREATEST(0, cantidad_disponible - $2),
+                 cantidad_vendida = cantidad_vendida + $2
              WHERE id_ptc = $1 AND id_sucursal = $3`,
             [item.id_ptc, cantidad, idSucursal],
           );
@@ -708,7 +717,8 @@ export class PagosService {
         if (cantidad <= 0) continue;
         await em.query(
           `UPDATE inventario_stock
-           SET cantidad_vendida = cantidad_vendida + $2
+           SET cantidad_disponible = GREATEST(0, cantidad_disponible - $2),
+               cantidad_vendida = cantidad_vendida + $2
            WHERE id_ptc = $1 AND id_sucursal = $3`,
           [item.id_ptc, cantidad, venta.id_sucursal],
         );

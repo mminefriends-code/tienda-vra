@@ -23,6 +23,7 @@ export function CartPanel() {
     cerrarPanel,
     actualizarCantidad,
     quitar,
+    vaciar,
     actualizandoIds,
     totalItems,
     totalCantidad,
@@ -36,7 +37,10 @@ export function CartPanel() {
     void actualizarCantidad(idCarritoItem, cantidad + 1);
   };
   const alRestar = (idCarritoItem: number, cantidad: number) => {
-    if (cantidad <= 1) return;
+    if (cantidad <= 1) {
+      void quitar(idCarritoItem);
+      return;
+    }
     void actualizarCantidad(idCarritoItem, cantidad - 1);
   };
 
@@ -61,14 +65,26 @@ export function CartPanel() {
             </div>
             <Badge variant="accent">{totalCantidad}</Badge>
           </div>
-          <button
-            type="button"
-            onClick={cerrarPanel}
-            className="rounded-full p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition"
-            aria-label="Cerrar carrito"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {totalItems > 0 && (
+              <button
+                type="button"
+                onClick={() => void vaciar()}
+                className="text-xs font-bold text-danger-600 hover:text-danger-800 hover:underline px-2 py-1 rounded cursor-pointer transition"
+                title="Vaciar todo el carrito"
+              >
+                Vaciar
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={cerrarPanel}
+              className="rounded-full p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-800 transition cursor-pointer"
+              aria-label="Cerrar carrito"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
@@ -127,8 +143,8 @@ export function CartPanel() {
                         <button
                           type="button"
                           onClick={() => alRestar(item.id_carrito_item, item.cantidad)}
-                          disabled={enProceso(item.id_carrito_item) || item.cantidad <= 1}
-                          className="rounded-md p-1 text-ink-600 hover:bg-ink-100 disabled:opacity-40"
+                          disabled={enProceso(item.id_carrito_item)}
+                          className="rounded-md p-1 text-ink-600 hover:bg-ink-100 disabled:opacity-40 cursor-pointer"
                           aria-label="Quitar uno"
                         >
                           <Minus size={14} />

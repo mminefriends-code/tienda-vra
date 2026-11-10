@@ -82,14 +82,23 @@ interface PrendaProcesada {
 }
 
 /**
- * Carga una imagen de forma segura con soporte crossOrigin.
+ * Carga una imagen de forma segura con soporte crossOrigin y fallback inmediato.
  */
 function cargarImagen(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // Para URLs externas aplicamos anonymous; para relativas directas no es necesario
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('No se pudo cargar la imagen de la prenda.'));
+    img.onerror = () => {
+      // Fallback secundario si el navegador o firewall bloqueó la petición con CORS
+      const fallback = new Image();
+      fallback.onload = () => resolve(fallback);
+      fallback.onerror = () => reject(new Error('No se pudo cargar la imagen de la prenda.'));
+      fallback.src = url;
+    };
     img.src = url;
   });
 }
@@ -128,19 +137,63 @@ function recortarPrendaInteligente(
 
   const idx = (x: number, y: number) => (y * w + x) * 4;
 
-  // 1. Muestrear los bordes exteriores para identificar el color de fondo predominante
+  // 0. Detectar si la imagen ya tiene canal alfa con fondo transparente (ej: PNG de producto de la tienda)
+  let pixelesTransparentes = 0;
+  const pasoMuestreo = Math.max(4, Math.floor((w * h) / 20000));
+  for (let i = 3; i < px.length; i += pasoMuestreo * 4) {
+    if (px[i] < 30) pixelesTransparentes++;
+  }
+  const esPngTransparente = pixelesTransparentes > 10;
+
+  if (esPngTransparente) {
+    // La imagen ya tiene fondo transparente. Ajustar directamente la caja contenedora ceñida.
+    let minX = w;
+    let minY = h;
+    let maxX = 0;
+    let maxY = 0;
+    let hayPrenda = false;
+
+    for (let y = 0; y < h; y += 2) {
+      for (let x = 0; x < w; x += 2) {
+        if (px[idx(x, y) + 3] > 25) {
+          hayPrenda = true;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    if (hayPrenda && maxX > minX + 20 && maxY > minY + 20) {
+      const cropW = maxX - minX + 1;
+      const cropH = maxY - minY + 1;
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = cropW;
+      croppedCanvas.height = cropH;
+      const cropCtx = croppedCanvas.getContext('2d');
+      if (cropCtx) {
+        cropCtx.drawImage(tempCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+      }
+      return { canvas: croppedCanvas, ancho: cropW, alto: cropH, cuelloRelativoY: 0.08 };
+    }
+    return { canvas: tempCanvas, ancho: origW, alto: origH, cuelloRelativoY: 0.12 };
+  }
+
+  // 1. Muestrear los bordes superiores y esquinas para identificar el color de fondo predominante
+  // (evitamos el borde inferior porque las prendas de ropa suelen tocar abajo)
   let rSum = 0;
   let gSum = 0;
   let bSum = 0;
   let samples = 0;
 
-  for (let x = 0; x < w; x += 3) {
-    rSum += px[idx(x, 0)] + px[idx(x, h - 1)];
-    gSum += px[idx(x, 0) + 1] + px[idx(x, h - 1) + 1];
-    bSum += px[idx(x, 0) + 2] + px[idx(x, h - 1) + 2];
-    samples += 2;
+  for (let x = 0; x < w; x += 2) {
+    rSum += px[idx(x, 0)];
+    gSum += px[idx(x, 0) + 1];
+    bSum += px[idx(x, 0) + 2];
+    samples++;
   }
-  for (let y = 0; y < h; y += 3) {
+  for (let y = 0; y < Math.floor(h * 0.4); y += 2) {
     rSum += px[idx(0, y)] + px[idx(w - 1, y)];
     gSum += px[idx(0, y) + 1] + px[idx(w - 1, y) + 1];
     bSum += px[idx(0, y) + 2] + px[idx(w - 1, y) + 2];
@@ -151,7 +204,7 @@ function recortarPrendaInteligente(
   const bgG = samples > 0 ? gSum / samples : 255;
   const bgB = samples > 0 ? bSum / samples : 255;
 
-  const tolFactor = Math.max(8, tolerancia * 1.6);
+  const tolFactor = Math.max(12, tolerancia * 1.8);
   const tolSq = tolFactor * tolFactor;
 
   const visitado = new Uint8Array(w * h);
@@ -167,9 +220,8 @@ function recortarPrendaInteligente(
 
   for (let x = 0; x < w; x++) {
     encolar(x, 0);
-    encolar(x, h - 1);
   }
-  for (let y = 0; y < h; y++) {
+  for (let y = 0; y < Math.floor(h * 0.7); y++) {
     encolar(0, y);
     encolar(w - 1, y);
   }
@@ -196,7 +248,7 @@ function recortarPrendaInteligente(
     const db = b - bgB;
     const distSq = dr * dr + dg * dg + db * db;
 
-    const esBlancoEstudio = r > 220 && g > 220 && b > 220 && Math.abs(r - g) < 18 && Math.abs(r - b) < 18;
+    const esBlancoEstudio = r > 215 && g > 215 && b > 215;
     const esFondo = distSq <= tolSq || esBlancoEstudio;
 
     if (esFondo) {
@@ -228,8 +280,10 @@ function recortarPrendaInteligente(
     }
   }
 
-  if (!hayPrenda || maxX <= minX || maxY <= minY) {
-    ctx.putImageData(imgData, 0, 0);
+  // Si el recorte eliminó demasiados píxeles o falló, restaurar la foto original para no dejar la prenda invisible
+  if (!hayPrenda || maxX <= minX + 30 || maxY <= minY + 30) {
+    ctx.clearRect(0, 0, origW, origH);
+    ctx.drawImage(img, 0, 0);
     return { canvas: tempCanvas, ancho: origW, alto: origH, cuelloRelativoY: 0.12 };
   }
 
@@ -1051,7 +1105,7 @@ export function VestidorRa({ abierto, prenda, onCerrar, onReservar }: Props) {
                 )}
               </div>
               <p className="text-xs font-medium text-ink-500">
-                {prenda.nombre} · Talla <span className="font-bold text-ink-700">{prenda.talla}</span> · Color{' '}
+                {prenda.nombre} · Talla <span className="font-bold text-ink-700">{tallaSeleccionada || prenda.talla}</span> · Color{' '}
                 <span className="font-bold text-ink-700">{prenda.color}</span>
               </p>
             </div>

@@ -265,14 +265,24 @@ export class ReservasService {
   }
 
   private async clienteDe(usuario: Usuario): Promise<number> {
-    const fila = this.unaFila(
+    let fila = this.unaFila(
       await this.dataSource.query(
         `SELECT id_cliente FROM clientes WHERE usuario_id = $1`,
         [usuario.id_usuario],
       ),
     );
     if (!fila) {
-      throw new ForbiddenException('Tu usuario no está registrado como cliente.');
+      const res = await this.dataSource.query(
+        `INSERT INTO clientes (usuario_id, nombre, telefono, fecha_registro) 
+         VALUES ($1, $2, $3, NOW()) 
+         RETURNING id_cliente`,
+        [
+          usuario.id_usuario,
+          usuario.nombre || usuario.email,
+          usuario.empleado?.telefono || null,
+        ],
+      );
+      fila = res[0];
     }
     return fila.id_cliente as number;
   }
@@ -327,7 +337,8 @@ export class ReservasService {
        JOIN productos p ON p.id_producto = ptc.id_producto
        JOIN tallas t ON t.id_talla = ptc.id_talla
        JOIN colores c ON c.id_color = ptc.id_color
-       WHERE LOWER(p.estado) = 'activo' AND ptc.estado_stock = 'Disponible'
+       WHERE LOWER(TRIM(p.estado)) IN ('activo', 'disponible')
+         AND (ptc.estado_stock IS NULL OR LOWER(TRIM(ptc.estado_stock)) = 'disponible')
        ORDER BY p.nombre ASC, t.orden ASC, c.nombre ASC`,
     )) as Fila[];
 
@@ -380,7 +391,9 @@ export class ReservasService {
        FROM inventario_stock ist
        JOIN producto_talla_color ptc ON ptc.id_ptc = ist.id_ptc
        JOIN productos p ON p.id_producto = ptc.id_producto
-       WHERE ist.id_sucursal = $1 AND LOWER(p.estado) = 'activo' AND ptc.estado_stock = 'Disponible'
+       WHERE ist.id_sucursal = $1
+         AND LOWER(TRIM(p.estado)) IN ('activo', 'disponible')
+         AND (ptc.estado_stock IS NULL OR LOWER(TRIM(ptc.estado_stock)) = 'disponible')
        ORDER BY ist.id_ptc ASC`,
       [idSucursal],
     )) as Fila[];
@@ -976,7 +989,8 @@ export class ReservasService {
         );
         await em.query(
           `UPDATE inventario_stock
-           SET cantidad_reservada = GREATEST(0, cantidad_reservada - $3)
+           SET cantidad_reservada = GREATEST(0, cantidad_reservada - $3),
+               cantidad_disponible = cantidad_disponible + $3
            WHERE id_ptc = $1 AND id_sucursal = $2`,
           [item.id_ptc, idSucursal, cantidad],
         );
@@ -1114,7 +1128,8 @@ export class ReservasService {
 
         await em.query(
           `UPDATE inventario_stock
-           SET cantidad_reservada = cantidad_reservada + $3
+           SET cantidad_reservada = cantidad_reservada + $3,
+               cantidad_disponible = GREATEST(0, cantidad_disponible - $3)
            WHERE id_ptc = $1 AND id_sucursal = $2`,
           [linea.id_ptc, dto.id_sucursal, linea.cantidad],
         );
@@ -1192,8 +1207,9 @@ sucursal: (sucursal.nombre as string) ?? String(dto.id_sucursal),
       if (!fila) {
         throw new UnprocessableEntityException('Prenda no encontrada.');
       }
+      const estadoProd = String(fila.estado_producto ?? '').toLowerCase();
       if (
-        String(fila.estado_producto ?? '').toLowerCase() !== 'activo' ||
+        (estadoProd !== 'activo' && estadoProd !== 'disponible') ||
         String(fila.estado_stock ?? '').toLowerCase() !== 'disponible'
       ) {
         throw new ConflictException(
