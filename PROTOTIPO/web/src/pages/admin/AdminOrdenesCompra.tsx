@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Eye, FileText, Package, Pencil, Plus, ShoppingCart, X, XCircle, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, FileText, Package, Pencil, Plus, X, XCircle, Zap } from 'lucide-react';
 import {
   api,
   type CrearOrdenCompraPayload,
@@ -616,10 +616,10 @@ export function AdminOrdenesCompra() {
       const cantidad = searchParams.get('cantidad');
       const provDefault = opciones.proveedores?.[0]?.id_proveedor;
       setPrellenado({
-        id_proveedor: provDefault,
-        id_sucursal: id_sucursal ? Number(id_sucursal) : opciones.sucursales?.[0]?.id_sucursal,
-        id_ptc: id_ptc ? Number(id_ptc) : undefined,
-        cantidad: cantidad ? Number(cantidad) : 20,
+        id_proveedor: provDefault ? String(provDefault) : undefined,
+        id_sucursal: id_sucursal ? String(id_sucursal) : (opciones.sucursales?.[0]?.id_sucursal ? String(opciones.sucursales[0].id_sucursal) : undefined),
+        id_ptc: id_ptc ? String(id_ptc) : undefined,
+        cantidad: cantidad ? String(cantidad) : '20',
       });
       setEditando(null);
       setErrorModal(null);

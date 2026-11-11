@@ -1782,6 +1782,26 @@ export const api = {
     return handleResponse<FinalizarReservaResultado>(res);
   },
 
+  async cobrarReserva(
+    idReserva: number,
+    body: { metodo_pago: 'Efectivo' | 'QR'; monto_recibido?: number },
+  ): Promise<{
+    message: string;
+    id_venta: number;
+    numero_reserva: string;
+    total: number;
+    metodo_pago: string;
+    vuelto: number;
+    numero_comprobante?: string;
+  }> {
+    const res = await solicitar(`${this.baseUrl}/reservas/${idReserva}/cobrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return handleResponse(res);
+  },
+
   // CU32 - Usar Vestidor Virtual con Realidad Aumentada
   async crearSesionRa(body: {
     id_ptc: number;

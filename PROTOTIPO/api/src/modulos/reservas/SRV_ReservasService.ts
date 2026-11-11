@@ -9,9 +9,11 @@ import {
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import type { Request } from 'express';
+import { randomUUID } from 'node:crypto';
 import { Usuario } from '../seguridad/CE_Modelos.js';
 import { BitacoraService } from '../seguridad/SRV_BitacoraService.js';
 import { EmailService } from '../seguridad/SRV_EmailService.js';
+import { ComprobantesService } from '../comprobantes/SRV_ComprobantesService.js';
 
 const FECHA_RE = /^\d{4}-\d{2}-\d{2}$/;
 const HORA_RE = /^([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
@@ -166,6 +168,7 @@ export class ReservasService {
     @InjectDataSource() private readonly dataSource: DataSource,
     private readonly bitacoraService: BitacoraService,
     private readonly emailService: EmailService,
+    private readonly comprobantesService: ComprobantesService,
   ) {}
 
   private unaFila(resultado: unknown): Fila | undefined {
@@ -893,6 +896,184 @@ export class ReservasService {
         ? `Atención finalizada. Reserva cumplida y ${stockLiberado} prenda(s) devueltas al stock.`
         : 'Atención finalizada. La reserva fue marcada como cumplida.';
     return { message: mensaje, numero, estado: 'Cumplida', stock_liberado: stockLiberado };
+  }
+
+  async cobrarReserva(
+    usuario: Usuario,
+    idReserva: number,
+    dto: { metodo_pago: 'Efectivo' | 'QR'; monto_recibido?: number },
+    request?: Request,
+  ): Promise<{
+    message: string;
+    id_venta: number;
+    numero_reserva: string;
+    total: number;
+    metodo_pago: string;
+    vuelto: number;
+    numero_comprobante?: string;
+  }> {
+    const { esAdmin, sucursalId, id } = await this.cargarReservaEnAlcance(usuario, idReserva);
+
+    const filaReserva = this.unaFila(
+      await this.dataSource.query(
+        `SELECT r.id_reserva, r.id_cliente, r.id_sucursal, r.estado, c.razon_social, c.ci_nit
+         FROM reservas r
+         LEFT JOIN clientes c ON c.id_cliente = r.id_cliente
+         WHERE r.id_reserva = $1`,
+        [id],
+      ),
+    );
+    if (!filaReserva) {
+      throw new NotFoundException('Reserva no encontrada.');
+    }
+    if (!esAdmin && sucursalId != null && (filaReserva.id_sucursal as number) !== sucursalId) {
+      throw new ForbiddenException('No tienes permisos para cobrar reservas de esta sucursal.');
+    }
+    const estadoActual = (filaReserva.estado as string) ?? '';
+    if (estadoActual !== 'En tienda') {
+      throw new ConflictException('La reserva debe estar "En tienda" para procesar la venta.');
+    }
+
+    const items = (await this.dataSource.query(
+      `SELECT ri.id_ptc, ri.cantidad, p.precio_base, p.precio_especial,
+              p.porcentaje_iva, c.porcentaje_iva_default,
+              p.nombre AS nombre_producto, t.nombre AS talla, col.nombre AS color
+       FROM reserva_items ri
+       JOIN producto_talla_color ptc ON ptc.id_ptc = ri.id_ptc
+       JOIN productos p ON p.id_producto = ptc.id_producto
+       JOIN tallas t ON t.id_talla = ptc.id_talla
+       JOIN colores col ON col.id_color = ptc.id_color
+       LEFT JOIN categorias c ON c.id_categoria = p.id_categoria
+       WHERE ri.id_reserva = $1
+       ORDER BY ri.id_reserva_item ASC`,
+      [id],
+    )) as Fila[];
+    if (items.length === 0) {
+      throw new ConflictException('La reserva no tiene prendas asignadas.');
+    }
+
+    let subtotal = 0;
+    let impuestos = 0;
+    const lineasVenta: Array<{ id_ptc: number; cantidad: number; precio_unitario: number; subtotal: number }> = [];
+
+    for (const it of items) {
+      const cant = Number(it.cantidad ?? 0);
+      const precioEspecial = it.precio_especial != null ? Number(it.precio_especial) : NaN;
+      const precioUnitario = !Number.isNaN(precioEspecial) ? precioEspecial : Number(it.precio_base ?? 0);
+      const ivaProducto = Number(it.porcentaje_iva);
+      const ivaCategoria = Number(it.porcentaje_iva_default ?? 0);
+      const tasa = !Number.isNaN(ivaProducto) && ivaProducto > 0 ? ivaProducto : ivaCategoria;
+
+      const sub = cant * precioUnitario;
+      const imp = sub * (tasa / 100);
+      subtotal += sub;
+      impuestos += imp;
+      lineasVenta.push({
+        id_ptc: Number(it.id_ptc),
+        cantidad: cant,
+        precio_unitario: precioUnitario,
+        subtotal: sub,
+      });
+    }
+
+    subtotal = Math.round(subtotal * 100) / 100;
+    impuestos = Math.round(impuestos * 100) / 100;
+    const total = Math.round((subtotal + impuestos) * 100) / 100;
+
+    const metodo = dto.metodo_pago === 'QR' ? 'QR' : 'Efectivo';
+    const montoRecibido =
+      metodo === 'Efectivo'
+        ? Number(dto.monto_recibido) > 0
+          ? Number(dto.monto_recibido)
+          : total
+        : total;
+    if (montoRecibido < total) {
+      throw new UnprocessableEntityException(`Monto insuficiente. Faltan Bs ${(total - montoRecibido).toFixed(2)}.`);
+    }
+    const vuelto = metodo === 'Efectivo' ? Math.round((montoRecibido - total) * 100) / 100 : 0;
+
+    let idVenta = 0;
+    const idSucursal = Number(filaReserva.id_sucursal);
+    const idCliente = filaReserva.id_cliente ? Number(filaReserva.id_cliente) : null;
+    const numReserva = this.numeroReserva(id);
+    const pasarela = metodo === 'Efectivo' ? 'CAJA' : 'PAGOSIMPLE_QR';
+    const refExterna = randomUUID();
+
+    await this.dataSource.transaction(async (em) => {
+      const ventaIns = this.unaFila(
+        await em.query(
+          `INSERT INTO ventas (id_cliente, id_usuario, id_sucursal, id_carrito, modalidad, metodo_pago,
+                               subtotal, impuestos, total, estado, fecha_venta)
+           VALUES ($1, $2, $3, NULL, 'Presencial', $4, $5, $6, $7, 'Completada', NOW())
+           RETURNING id_venta`,
+          [idCliente, usuario.id_usuario, idSucursal, metodo, subtotal, impuestos, total],
+        ),
+      );
+      if (!ventaIns) throw new Error('No se pudo crear la venta.');
+      idVenta = Number(ventaIns.id_venta);
+
+      for (const l of lineasVenta) {
+        await em.query(
+          `INSERT INTO venta_items (id_venta, id_ptc, cantidad, precio_unitario, subtotal)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [idVenta, l.id_ptc, l.cantidad, l.precio_unitario, l.subtotal],
+        );
+      }
+
+      await em.query(
+        `INSERT INTO transacciones_pago
+           (id_venta, id_usuario, proveedor_pasarela, monto, moneda, metodo, estado,
+            referencia_externa, id_transaccion_pasarela, fecha_hora)
+         VALUES ($1, $2, $3, $4, 'BOB', $5, 'Aprobado', $6, NULL, NOW())`,
+        [idVenta, usuario.id_usuario, pasarela, total, metodo, refExterna],
+      );
+
+      for (const l of lineasVenta) {
+        await em.query(
+          `UPDATE inventario_stock
+           SET cantidad_reservada = GREATEST(0, cantidad_reservada - $1),
+               cantidad_vendida = cantidad_vendida + $1
+           WHERE id_ptc = $2 AND id_sucursal = $3`,
+          [l.cantidad, l.id_ptc, idSucursal],
+        );
+        await em.query(
+          `INSERT INTO movimientos_inventario (id_ptc, id_sucursal, tipo_movimiento, cantidad, referencia, id_usuario, id_venta, id_reserva)
+           VALUES ($1, $2, 'Venta', -$3, $4, $5, $6, $7)`,
+          [l.id_ptc, idSucursal, l.cantidad, `Venta ${numReserva} (VNT-${idVenta})`, usuario.id_usuario, idVenta, id],
+        );
+      }
+
+      await em.query(`UPDATE reservas SET estado = 'Cumplida' WHERE id_reserva = $1`, [id]);
+    });
+
+    let numeroComprobante: string | undefined;
+    try {
+      const comprobante = await this.comprobantesService.generar(idVenta, usuario.id_usuario, request);
+      numeroComprobante = String(comprobante?.numero ?? '');
+    } catch (e) {
+      this.logger.warn(`No se pudo emitir comprobante para venta #${idVenta}: ${e}`);
+    }
+
+    await this.bitacoraService.registrar(
+      usuario.id_usuario,
+      'INSERT',
+      'ventas',
+      `Venta #${idVenta} generada desde Reserva ${numReserva} por Bs ${total.toFixed(2)} (${metodo}).`,
+      request,
+      idVenta,
+      null,
+      { id_reserva: id, total, metodo, vuelto, lineas: lineasVenta },
+    );
+
+    return {
+      message: `¡Venta completada con éxito! Pago registrado mediante ${metodo} y reserva ${numReserva} finalizada.`,
+      id_venta: idVenta,
+      numero_reserva: numReserva,
+      total,
+      metodo_pago: metodo,
+      vuelto,
+      numero_comprobante: numeroComprobante,
+    };
   }
 
   private async itemDetalle(idReserva: number): Promise<ReservaDetalleItem[]> {

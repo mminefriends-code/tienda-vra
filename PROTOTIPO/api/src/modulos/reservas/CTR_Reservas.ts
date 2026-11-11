@@ -131,6 +131,23 @@ export class ReservasController {
     return this.reservasService.finalizarReserva(currentUser, id, request);
   }
 
+  @Post(':id/cobrar')
+  @UseGuards(JwtAuthGuard)
+  cobrar(
+    @Param('id') id: number,
+    @Body() body: { metodo_pago?: string; monto_recibido?: number },
+    @Req() request: Request,
+    @UsuarioActual() currentUser: Usuario,
+  ) {
+    const metodo = body?.metodo_pago === 'QR' ? 'QR' : 'Efectivo';
+    return this.reservasService.cobrarReserva(
+      currentUser,
+      id,
+      { metodo_pago: metodo, monto_recibido: body?.monto_recibido },
+      request,
+    );
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)

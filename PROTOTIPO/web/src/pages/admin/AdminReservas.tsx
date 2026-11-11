@@ -1,6 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AlertCircle, CalendarClock, CheckCircle2, Clock, MapPin, PackageCheck, RefreshCw, Store, User, UserCheck, X } from 'lucide-react';
+import {
+  AlertCircle,
+  Banknote,
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  PackageCheck,
+  QrCode,
+  RefreshCw,
+  RotateCcw,
+  ShoppingBag,
+  Store,
+  User,
+  UserCheck,
+  X,
+} from 'lucide-react';
 import { api, ApiError, type DetalleReservaSucursal, type ReservaSucursalItem } from '@/lib/api.js';
 import { monto } from '@/lib/formato.js';
 import { useAuth } from '@/contexts/AuthContext.js';
@@ -56,6 +72,8 @@ function ModalDetalleReserva({
   alReintentar,
   transicionando,
   alTransicionar,
+  cobrando,
+  alCobrar,
 }: {
   abierto: boolean;
   datos: DetalleReservaSucursal | null;
@@ -65,10 +83,26 @@ function ModalDetalleReserva({
   alReintentar: () => void;
   transicionando: boolean;
   alTransicionar: (tipo: TipoTransicion) => void;
+  cobrando: boolean;
+  alCobrar: (idReserva: number, metodoPago: 'Efectivo' | 'QR', montoRecibido?: number) => void;
 }) {
-  if (!abierto) return null;
+  const [metodoPago, setMetodoPago] = useState<'Efectivo' | 'QR'>('Efectivo');
+  const [montoRecibido, setMontoRecibido] = useState<string>('');
 
   const totalEstimado = (datos?.items ?? []).reduce((acc, i) => acc + i.precio_base * i.cantidad, 0);
+
+  useEffect(() => {
+    if (datos) {
+      const tot = (datos.items ?? []).reduce((acc, i) => acc + i.precio_base * i.cantidad, 0);
+      setMontoRecibido(String(tot));
+      setMetodoPago('Efectivo');
+    }
+  }, [datos]);
+
+  if (!abierto) return null;
+
+  const recibidoNum = Number(montoRecibido) || 0;
+  const vuelto = recibidoNum - totalEstimado;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -172,14 +206,121 @@ function ModalDetalleReserva({
                     ))}
                   </div>
                 )}
-{datos.items.length > 0 && (
+
+                {datos.items.length > 0 && (
                   <div className="mt-3 flex items-center justify-between border-t border-ink-200 pt-3">
                     <span className="text-sm font-semibold text-ink-600">Total estimado</span>
                     <span className="text-base font-extrabold text-brand-700">Bs. {monto(totalEstimado)}</span>
                   </div>
                 )}
 
-                {ACCIONES_POR_ESTADO[datos.reserva.estado] && (
+                {/* Si la reserva está en tienda: Flujo de Decisión del Cliente */}
+                {datos.reserva.estado === 'En tienda' ? (
+                  <div className="mt-4 space-y-4 rounded-2xl border-2 border-emerald-500/25 bg-emerald-50/40 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold shadow-xs">
+                          <ShoppingBag size={18} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-bold text-ink-900">Cobro de Reserva en Caja</p>
+                          <p className="text-xs text-ink-500">El cliente probó las prendas y decide comprarlas</p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-black text-emerald-700">Bs. {monto(totalEstimado)}</span>
+                    </div>
+
+                    {/* Selector de método de pago */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setMetodoPago('Efectivo')}
+                        className={cn(
+                          'flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition border',
+                          metodoPago === 'Efectivo'
+                            ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+                            : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50',
+                        )}
+                      >
+                        <Banknote size={16} /> Pago en Efectivo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMetodoPago('QR')}
+                        className={cn(
+                          'flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition border',
+                          metodoPago === 'QR'
+                            ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs'
+                            : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50',
+                        )}
+                      >
+                        <QrCode size={16} /> Pago Simple QR
+                      </button>
+                    </div>
+
+                    {metodoPago === 'Efectivo' ? (
+                      <div className="rounded-xl border border-emerald-200 bg-white p-3.5 space-y-2.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <label className="text-xs font-semibold text-ink-700">Monto recibido (Bs.):</label>
+                          <input
+                            type="number"
+                            step="any"
+                            value={montoRecibido}
+                            onChange={(e) => setMontoRecibido(e.target.value)}
+                            className="w-32 rounded-lg border border-ink-300 px-3 py-1.5 text-right font-bold text-ink-900 focus:border-brand-500 focus:outline-none"
+                            placeholder={String(totalEstimado)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs font-semibold border-t border-ink-100 pt-2">
+                          <span className="text-ink-600">Cambio / Vuelto al cliente:</span>
+                          <span className={cn('text-sm font-extrabold', vuelto >= 0 ? 'text-emerald-700' : 'text-danger-600')}>
+                            {vuelto >= 0 ? `Bs. ${monto(vuelto)}` : `Faltan Bs. ${monto(Math.abs(vuelto))}`}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-white p-3.5 text-center">
+                        <div className="rounded-lg border border-ink-200 p-2 bg-white shadow-xs">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=TIENDAS_VRA_RES_${datos.reserva.id_reserva}_TOTAL_${totalEstimado}`}
+                            alt="QR de Pago Simple"
+                            className="h-28 w-28"
+                          />
+                        </div>
+                        <p className="text-xs font-bold text-ink-800">QR Bancario Simple · Red Enlace Bolivia</p>
+                        <p className="text-[11px] text-ink-500">
+                          El cliente escanea desde su app bancaria para pagar exactamente <b>Bs. {monto(totalEstimado)}</b>
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 shadow-sm gap-2"
+                      disabled={cobrando || (metodoPago === 'Efectivo' && vuelto < 0)}
+                      onClick={() =>
+                        alCobrar(
+                          datos.reserva.id_reserva,
+                          metodoPago,
+                          metodoPago === 'Efectivo' ? Number(montoRecibido) || totalEstimado : totalEstimado,
+                        )
+                      }
+                    >
+                      {cobrando ? <RefreshCw size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                      Cobrar Bs. {monto(totalEstimado)} y Entregar Prenda
+                    </Button>
+
+                    <div className="border-t border-emerald-200/80 pt-2.5 text-center">
+                      <button
+                        type="button"
+                        disabled={transicionando || cobrando}
+                        onClick={() => alTransicionar('finalizar')}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-danger-600 transition"
+                      >
+                        <RotateCcw size={13} /> El cliente no compró · Finalizar y devolver prendas al stock
+                      </button>
+                    </div>
+                  </div>
+                ) : ACCIONES_POR_ESTADO[datos.reserva.estado] ? (
                   <div className="border-t border-ink-100 pt-4">
                     <Button
                       className="w-full"
@@ -190,15 +331,13 @@ function ModalDetalleReserva({
                         <RefreshCw size={15} className="animate-spin" />
                       ) : ACCIONES_POR_ESTADO[datos.reserva.estado]!.tipo === 'preparar' ? (
                         <PackageCheck size={15} />
-                      ) : ACCIONES_POR_ESTADO[datos.reserva.estado]!.tipo === 'confirmar' ? (
-                        <UserCheck size={15} />
                       ) : (
-                        <CheckCircle2 size={15} />
+                        <UserCheck size={15} />
                       )}
                       {ACCIONES_POR_ESTADO[datos.reserva.estado]!.label}
                     </Button>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
@@ -226,6 +365,7 @@ export function AdminReservas() {
 
   const [transicionId, setTransicionId] = useState<number | null>(null);
   const [transicionAccion, setTransicionAccion] = useState<TipoTransicion | null>(null);
+  const [cobrandoId, setCobrandoId] = useState<number | null>(null);
 
   const pendientes = useMemo(
     () => (lista ?? []).filter((r) => r.estado === 'Solicitada' || r.estado === 'Preparada').length,
@@ -301,6 +441,37 @@ export function AdminReservas() {
       setTransicionAccion(null);
     }
   }, [cargar]);
+
+  const ejecutarCobro = useCallback(
+    async (idReserva: number, metodoPago: 'Efectivo' | 'QR', montoRecibido?: number) => {
+      setCobrandoId(idReserva);
+      try {
+        const res = await api.cobrarReserva(idReserva, {
+          metodo_pago: metodoPago,
+          monto_recibido: montoRecibido,
+        });
+        setToast({
+          mensaje: `${res.message}${res.vuelto > 0 ? ` · Vuelto al cliente: Bs. ${monto(res.vuelto)}` : ''}`,
+          tipo: 'exito',
+        });
+        setDetalleAbierto(false);
+        setDetalle(null);
+        setDetalleId(null);
+        void cargar();
+      } catch (err) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : 'No se pudo procesar el cobro de la reserva.';
+        setToast({ mensaje: msg, tipo: 'error' });
+      } finally {
+        setCobrandoId(null);
+      }
+    },
+    [cargar],
+  );
 
   useEffect(() => {
     if (permisoOk && token) {
@@ -420,7 +591,27 @@ export function AdminReservas() {
                   <Button size="sm" onClick={() => void cargarDetalle(reserva.id_reserva)}>
                     Ver
                   </Button>
-                  {ACCIONES_POR_ESTADO[reserva.estado] && (
+                  {reserva.estado === 'En tienda' ? (
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-xs"
+                        onClick={() => void cargarDetalle(reserva.id_reserva)}
+                      >
+                        <ShoppingBag size={14} /> Cobrar Venta
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={transicionId === reserva.id_reserva}
+                        title="El cliente no se llevó la prenda: devolver al stock"
+                        onClick={() => void ejecutarTransicion(reserva.id_reserva, 'finalizar')}
+                        className="hover:text-danger-600 hover:bg-danger-50"
+                      >
+                        <RotateCcw size={14} /> No compró
+                      </Button>
+                    </div>
+                  ) : ACCIONES_POR_ESTADO[reserva.estado] ? (
                     <Button
                       size="sm"
                       disabled={transicionId === reserva.id_reserva}
@@ -430,14 +621,12 @@ export function AdminReservas() {
                         <RefreshCw size={14} className="animate-spin" />
                       ) : ACCIONES_POR_ESTADO[reserva.estado]!.tipo === 'preparar' ? (
                         <PackageCheck size={14} />
-                      ) : ACCIONES_POR_ESTADO[reserva.estado]!.tipo === 'confirmar' ? (
-                        <UserCheck size={14} />
                       ) : (
-                        <CheckCircle2 size={14} />
+                        <UserCheck size={14} />
                       )}
                       {ACCIONES_POR_ESTADO[reserva.estado]!.label}
                     </Button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -458,6 +647,8 @@ export function AdminReservas() {
         alReintentar={() => detalleId != null && void cargarDetalle(detalleId)}
         transicionando={transicionId != null}
         alTransicionar={(tipo) => detalleId != null && void ejecutarTransicion(detalleId, tipo)}
+        cobrando={cobrandoId != null}
+        alCobrar={ejecutarCobro}
       />
 
       {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
