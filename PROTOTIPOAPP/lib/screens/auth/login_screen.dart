@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/api_constants.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -27,11 +28,83 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.text = pass;
   }
 
+  void _showServerDialog() {
+    final controller = TextEditingController(text: ApiConstants.baseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Configurar Servidor API'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'URL de la API',
+                hintText: 'http://192.168.0.11:3000/api/v1',
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('Presets rápidos:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('Wi-Fi Casa (192.168.0.11)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://192.168.0.11:3000/api/v1',
+                ),
+                ActionChip(
+                  label: const Text('Internet Cloudflare', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'https://craig-malpractice-thought-grows.trycloudflare.com/api/v1',
+                ),
+                ActionChip(
+                  label: const Text('Cable USB (localhost)', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://localhost:3000/api/v1',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              ApiConstants.setBaseUrl(controller.text.trim());
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Servidor actualizado a:\n${ApiConstants.baseUrl}')),
+              );
+              setState(() {});
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_ethernet, color: AppTheme.primary),
+            tooltip: 'Configurar Servidor API',
+            onPressed: _showServerDialog,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -183,6 +256,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () => _quickFill('rojas@gmail.com', 'admin123'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+              InkWell(
+                onTap: _showServerDialog,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    'API: ${ApiConstants.baseUrl}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ],
           ),
