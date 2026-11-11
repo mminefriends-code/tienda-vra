@@ -10,6 +10,7 @@ import 'admin_roles_screen.dart';
 import 'admin_branches_screen.dart';
 import 'admin_inventory_screen.dart';
 import 'admin_audit_screen.dart';
+import 'admin_voice_reports_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -205,6 +206,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const AdminAlertsScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+
+              _actionTile(
+                title: 'Reportes por Voz con IA',
+                subtitle: 'Dictado de reportes ejecutivos en PDF y Excel',
+                icon: Icons.mic_rounded,
+                color: Colors.deepPurple,
+                badge: 'IA',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminVoiceReportsScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+
+              _actionTile(
+                title: 'Registro de Clientes & Personal',
+                subtitle: 'Dar de alta clientes o nuevo personal en sucursal',
+                icon: Icons.person_add_alt_1_outlined,
+                color: Colors.blueAccent,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminUsersScreen()),
                   );
                 },
               ),

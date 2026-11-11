@@ -154,16 +154,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   ActionChip(
                     avatar: const Icon(Icons.admin_panel_settings, size: 16),
-                    label: const Text('Admin', style: TextStyle(fontSize: 12)),
+                    label: const Text('Super Admin', style: TextStyle(fontSize: 12)),
                     onPressed: () => _quickFill('admin@tiendavra.bo', 'admin123'),
                   ),
                   ActionChip(
-                    avatar: const Icon(Icons.storefront, size: 16),
-                    label: const Text('Cajero / Vendedor', style: TextStyle(fontSize: 12)),
+                    avatar: const Icon(Icons.point_of_sale, size: 16, color: Colors.green),
+                    label: const Text('Caja La Paz', style: TextStyle(fontSize: 12)),
                     onPressed: () => _quickFill('caja.lapaz@tiendavra.bo', 'admin123'),
                   ),
                   ActionChip(
-                    avatar: const Icon(Icons.person, size: 16),
+                    avatar: const Icon(Icons.point_of_sale, size: 16, color: Colors.teal),
+                    label: const Text('Caja Santa Cruz', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _quickFill('caja.scz@tiendavra.bo', 'admin123'),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.point_of_sale, size: 16, color: Colors.cyan),
+                    label: const Text('Caja Cbb', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _quickFill('caja.cbb@tiendavra.bo', 'admin123'),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.person, size: 16, color: Colors.amber),
                     label: const Text('Cliente Demo', style: TextStyle(fontSize: 12)),
                     onPressed: () => _quickFill('maria.gonzales@correo.com', 'admin123'),
                   ),

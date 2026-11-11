@@ -20,6 +20,7 @@ class CartItemModel {
   });
 
   double get subtotal => precioUnitario * cantidad;
+  double get precio => precioUnitario;
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(

@@ -1,6 +1,6 @@
 import type { UsuarioSesion } from './api.js';
 
-const ROLES_PERSONAL = ['Administrador', 'Encargado de Sucursal', 'Cajero'];
+const ROLES_PERSONAL = ['Administrador', 'Gerente', 'Encargado de Sucursal', 'Vendedor', 'Cajero'];
 
 export function esPersonal(usuario: UsuarioSesion | null): boolean {
   if (!usuario) return false;

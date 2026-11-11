@@ -34,7 +34,8 @@ export function Login() {
   const pendienteReserva = !!leerIntencionReserva();
 
   if (usuario) {
-    const destino = destinoValido(desdeQuery) ?? (esPersonal(usuario) ? '/admin' : '/');
+    const esCajero = usuario.rol === 'Cajero' || usuario.rol === 'Vendedor';
+    const destino = destinoValido(desdeQuery) ?? (esCajero ? '/admin/caja' : (esPersonal(usuario) ? '/admin' : '/'));
     return <Navigate to={destino} replace />;
   }
 
@@ -48,7 +49,8 @@ export function Login() {
     setEnviando(true);
     try {
       const u = await login(credencial.trim(), password.trim());
-      const destino = desde ?? (esPersonal(u) ? '/admin' : '/');
+      const esCajero = u.rol === 'Cajero' || u.rol === 'Vendedor';
+      const destino = desde ?? (esCajero ? '/admin/caja' : (esPersonal(u) ? '/admin' : '/'));
       navigate(destino, { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -151,7 +153,7 @@ export function Login() {
           <p className="mb-2 text-center font-bold text-[#0F1C30]">
             ⚡ Acceso Rápido de Demostración:
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => {
@@ -160,8 +162,8 @@ export function Login() {
               }}
               className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
             >
-              <span className="block font-bold text-[#304A6E]">👑 Admin</span>
-              <span className="font-mono text-[10px] text-[#7E91A8]">admin@...</span>
+              <span className="block font-bold text-[#304A6E]">👑 Super Admin</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">admin@tiendavra.bo</span>
             </button>
 
             <button
@@ -172,8 +174,32 @@ export function Login() {
               }}
               className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
             >
-              <span className="block font-bold text-emerald-700">🛒 Cajero</span>
+              <span className="block font-bold text-emerald-700">🛒 Caja La Paz</span>
               <span className="font-mono text-[10px] text-[#7E91A8]">caja.lapaz@...</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCredencial('caja.scz@tiendavra.bo');
+                setPassword('admin123');
+              }}
+              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+            >
+              <span className="block font-bold text-teal-700">🛒 Caja Santa Cruz</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">caja.scz@...</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCredencial('caja.cbb@tiendavra.bo');
+                setPassword('admin123');
+              }}
+              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+            >
+              <span className="block font-bold text-cyan-700">🛒 Caja Cbb</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">caja.cbb@...</span>
             </button>
 
             <button
@@ -182,10 +208,10 @@ export function Login() {
                 setCredencial('maria.gonzales@correo.com');
                 setPassword('admin123');
               }}
-              className="rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
+              className="col-span-2 sm:col-span-1 rounded-xl border border-[#D6E0ED] bg-white p-2 text-left font-semibold text-[#0F1C30] transition hover:border-[#304A6E] hover:bg-brand-50"
             >
-              <span className="block font-bold text-amber-700">🛍️ Cliente</span>
-              <span className="font-mono text-[10px] text-[#7E91A8]">maria@...</span>
+              <span className="block font-bold text-amber-700">🛍️ Cliente Demo</span>
+              <span className="font-mono text-[10px] text-[#7E91A8]">maria.gonzales@...</span>
             </button>
           </div>
         </div>

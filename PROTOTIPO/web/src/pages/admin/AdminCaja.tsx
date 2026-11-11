@@ -462,8 +462,17 @@ export function AdminCaja() {
           </span>
           <div>
             <h1 className="text-2xl font-extrabold text-ink-900">Nueva Venta (POS)</h1>
-            <p className="text-sm text-ink-500">Registra ventas presenciales en el punto de caja.</p>
+            <p className="text-sm text-ink-500">Registra ventas presenciales físicas en el punto de caja de tu sucursal.</p>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-900">
+            👤 Cajero: {usuario?.nombre ?? usuario?.email}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900">
+            🏢 Sucursal Operativa: Venta Presencial Inmediata
+          </span>
         </div>
       </div>
 

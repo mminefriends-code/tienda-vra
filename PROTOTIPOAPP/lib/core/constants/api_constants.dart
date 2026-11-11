@@ -4,7 +4,7 @@ class ApiConstants {
   // O compila pasando: --dart-define=API_URL=https://tu-api.onrender.com/api/v1
   static String baseUrl = const String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://10.0.2.2:3000/api/v1',
+    defaultValue: 'http://192.168.0.11:3000/api/v1',
   );
 
   static void setBaseUrl(String newUrl) {
@@ -52,4 +52,6 @@ class ApiConstants {
   static const String adminAudit = '/admin/auditoria';
   static const String adminInventoryStock = '/admin/inventario/existencias';
   static const String adminProducts = '/admin/catalogo/productos';
+  static const String reportesVoz = '/reportes/voz';
+  static const String adminClientes = '/admin/clientes';
 }

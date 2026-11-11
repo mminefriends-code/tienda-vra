@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { monto } from '@/lib/formato.js';
 import { usarSeo, datosProducto } from '@/lib/seo.js';
 import {
@@ -30,6 +30,7 @@ import { Skeleton } from '@/components/ui/Skeleton.js';
 import { cn } from '@/lib/utils.js';
 import { useAuth } from '@/contexts/AuthContext.js';
 import { useCart } from '@/contexts/CartContext.js';
+import { esPersonal } from '@/lib/roles.js';
 import { leerIntencionReserva, limpiarIntencionReserva, type InicialReserva } from '@/lib/reservas.js';
 import { ModalReserva, type ProductoParaReserva } from '@/components/reserva/ModalReserva.js';
 import { VestidorRa, type PrendaVestidorRa } from '@/components/ra/VestidorRa.js';
@@ -56,6 +57,7 @@ export function Producto() {
   const { codigo } = useParams<{ codigo: string }>();
   const { usuario } = useAuth();
   const { agregar, agregando } = useCart();
+  const navigate = useNavigate();
 
   const [datos, setDatos] = useState<ConsultaDisponibilidad | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -401,9 +403,15 @@ export function Producto() {
                   {datos.producto.categoria}
                 </Badge>
               )}
-              <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/15 border border-accent-300/40 px-3 py-1 text-xs font-bold text-accent-800 backdrop-blur">
-                <Sparkles size={13} className="text-accent-600" /> Vestidor Virtual RA
-              </span>
+              {!esPersonal(usuario) ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/15 border border-accent-300/40 px-3 py-1 text-xs font-bold text-accent-800 backdrop-blur">
+                  <Sparkles size={13} className="text-accent-600" /> Vestidor Virtual RA
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/15 border border-brand-300/40 px-3 py-1 text-xs font-bold text-brand-800 backdrop-blur">
+                  <Store size={13} className="text-brand-600" /> Venta Física en Sucursal
+                </span>
+              )}
             </div>
 
             {/* Color Tag Badge on Image */}
@@ -670,23 +678,38 @@ export function Producto() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex flex-col gap-3 pt-2">
-                  <Button
-                    size="lg"
-                    className="w-full justify-center shadow-md text-base font-bold py-6 bg-brand-600 hover:bg-brand-700 active:bg-brand-800"
-                    onClick={abrirReserva}
-                  >
-                    <CalendarClock size={20} /> Reservar para probar en sucursal
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="secondary"
-                    className="w-full justify-center text-sm font-semibold border-accent-300 text-accent-800 hover:bg-accent-50/50"
-                    onClick={abrirVestidor}
-                  >
-                    <ScanLine size={18} className="text-accent-600" /> Probar en vestidor virtual (RA)
-                  </Button>
-                </div>
+                {esPersonal(usuario) ? (
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button
+                      size="lg"
+                      className="w-full justify-center shadow-md text-base font-bold py-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white"
+                      onClick={() => navigate('/admin/caja')}
+                    >
+                      <ShoppingCart size={20} /> Venta Física en Mostrador (Ir a Caja POS)
+                    </Button>
+                    <p className="text-center text-xs text-ink-500 font-medium">
+                      Modo Empleado / Caja: Las pruebas virtuales y reservas son exclusivas para clientes. Como personal de sucursal, realiza la venta física directa.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 pt-2">
+                    <Button
+                      size="lg"
+                      className="w-full justify-center shadow-md text-base font-bold py-6 bg-brand-600 hover:bg-brand-700 active:bg-brand-800"
+                      onClick={abrirReserva}
+                    >
+                      <CalendarClock size={20} /> Reservar para probar en sucursal
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="secondary"
+                      className="w-full justify-center text-sm font-semibold border-accent-300 text-accent-800 hover:bg-accent-50/50"
+                      onClick={abrirVestidor}
+                    >
+                      <ScanLine size={18} className="text-accent-600" /> Probar en vestidor virtual (RA)
+                    </Button>
+                  </div>
+                )}
 
                 {/* Value Props & Guarantees */}
                 <div className="grid grid-cols-2 gap-3 border-t border-ink-100 pt-5 text-xs text-ink-600">
