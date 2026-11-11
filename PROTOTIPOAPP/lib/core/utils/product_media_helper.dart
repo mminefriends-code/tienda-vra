@@ -11,24 +11,33 @@ class ProductMediaHelper {
     {'prenda': 'remera', 'color': 'blanco', 'fichero': 'polera-blanca.png'},
     {'prenda': 'remera', 'color': 'blanca', 'fichero': 'polera-blanca.png'},
     {'prenda': 'remera', 'color': 'gris', 'fichero': 'polera-gris.png'},
+    {'prenda': 'remera', 'color': 'azul', 'fichero': 'polera-azul.png'},
+    {'prenda': 'remera', 'color': 'azul marino', 'fichero': 'polera-azul.png'},
 
     {'prenda': 'polo', 'color': 'negro', 'fichero': 'polera-negra.png'},
     {'prenda': 'polo', 'color': 'negra', 'fichero': 'polera-negra.png'},
     {'prenda': 'polo', 'color': 'blanco', 'fichero': 'polera-blanca.png'},
     {'prenda': 'polo', 'color': 'blanca', 'fichero': 'polera-blanca.png'},
     {'prenda': 'polo', 'color': 'gris', 'fichero': 'polera-gris.png'},
+    {'prenda': 'polo', 'color': 'azul', 'fichero': 'polera-azul.png'},
+    {'prenda': 'polo', 'color': 'azul marino', 'fichero': 'polera-azul.png'},
     {'prenda': 'polo', 'color': 'rojo', 'fichero': 'polo-rojo.png'},
     {'prenda': 'polo', 'color': 'roja', 'fichero': 'polo-rojo.png'},
 
+    {'prenda': 'canguro', 'color': 'negro', 'fichero': 'polera-negra.png'},
+    {'prenda': 'canguro', 'color': 'negra', 'fichero': 'polera-negra.png'},
+    {'prenda': 'canguro', 'color': 'blanco', 'fichero': 'polera-blanca.png'},
+    {'prenda': 'canguro', 'color': 'blanca', 'fichero': 'polera-blanca.png'},
+    {'prenda': 'canguro', 'color': 'gris', 'fichero': 'polera-gris.png'},
+    {'prenda': 'canguro', 'color': 'azul', 'fichero': 'polera-azul.png'},
+    {'prenda': 'canguro', 'color': 'azul marino', 'fichero': 'polera-azul.png'},
+
     {'prenda': 'campera', 'color': 'negro', 'fichero': 'campera-negro.png'},
     {'prenda': 'campera', 'color': 'negra', 'fichero': 'campera-negro.png'},
-    {'prenda': 'pantalon', 'color': 'azul', 'fichero': 'pantalon-azul.png'},
-    {'prenda': 'pijama', 'color': 'rosa', 'fichero': 'pijama-rosa.png'},
-
-    {'prenda': 'zapatilla', 'color': 'negro', 'fichero': 'zapatilla-negro.png'},
-    {'prenda': 'zapatilla', 'color': 'negra', 'fichero': 'zapatilla-negro.png'},
-    {'prenda': 'zapatilla', 'color': 'blanco', 'fichero': 'zapatilla-blanca.png'},
-    {'prenda': 'zapatilla', 'color': 'blanca', 'fichero': 'zapatilla-blanca.png'},
+    {'prenda': 'campera', 'color': 'azul', 'fichero': 'polera-azul.png'},
+    {'prenda': 'campera', 'color': 'azul marino', 'fichero': 'polera-azul.png'},
+    {'prenda': 'campera', 'color': 'gris', 'fichero': 'polera-gris.png'},
+    {'prenda': 'campera', 'color': 'blanco', 'fichero': 'polera-blanca.png'},
   ];
 
   static String _normalizar(String text) {
@@ -38,13 +47,11 @@ class ProductMediaHelper {
   /// Deduce el tipo de prenda a partir del código y nombre del producto
   static String? tipoDePrenda(String codigo, String nombre) {
     final t = '${codigo.toLowerCase()} ${nombre.toLowerCase()}';
-    if (RegExp(r'zapat|calzado|sandal|tenis').hasMatch(t)) return 'zapatilla';
-    if (RegExp(r'pijama|batik').hasMatch(t)) return 'pijama';
-    if (RegExp(r'pantalon|chino|jean|pantal').hasMatch(t)) return 'pantalon';
-    if (RegExp(r'campera|abrigo|chaqueta|coat').hasMatch(t)) return 'campera';
+    if (RegExp(r'canguro|hoodie|sudadera|poleron').hasMatch(t)) return 'canguro';
+    if (RegExp(r'campera|abrigo|chaqueta|coat|chamarra|casaca').hasMatch(t)) return 'campera';
     if (RegExp(r'polo').hasMatch(t)) return 'polo';
     if (RegExp(r'polera|remera|camiseta|camisa|blusa|t-shirt|top').hasMatch(t)) return 'remera';
-    return null;
+    return 'remera';
   }
 
   /// Retorna la ruta del asset local (ej: 'assets/images/productos/polera-negra.png')

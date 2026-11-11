@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -138,16 +137,24 @@ class GarmentProcessor {
         }
       }
 
-      // 3. Barrido global de seguridad para eliminar cualquier resto de blanco exterior
-      for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-          final pi = idx(x, y);
-          final r = pixels[pi];
-          final g = pixels[pi + 1];
-          final b = pixels[pi + 2];
-          // Si es blanco o gris muy claro de fondo aislado
-          if (r > 200 && g > 200 && b > 200 && (r - g).abs() < 25 && (r - b).abs() < 25) {
-            pixels[pi + 3] = 0;
+      // 3. Si la imagen NO tiene transparencia nativa, aplicar barrido de seguridad
+      int transparentCount = 0;
+      for (int i = 3; i < pixels.length; i += 16) {
+        if (pixels[i] < 10) transparentCount++;
+      }
+      final bool alreadyTransparent = transparentCount > 50;
+
+      if (!alreadyTransparent) {
+        for (int y = 0; y < h; y++) {
+          for (int x = 0; x < w; x++) {
+            final pi = idx(x, y);
+            final r = pixels[pi];
+            final g = pixels[pi + 1];
+            final b = pixels[pi + 2];
+            // Si es blanco o gris muy claro de fondo de estudio aislado
+            if (r > 235 && g > 235 && b > 235 && (r - g).abs() < 15 && (r - b).abs() < 15) {
+              pixels[pi + 3] = 0;
+            }
           }
         }
       }

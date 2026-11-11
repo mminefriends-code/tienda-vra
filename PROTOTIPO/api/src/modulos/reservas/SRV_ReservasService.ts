@@ -284,7 +284,7 @@ export class ReservasService {
       );
       fila = res[0];
     }
-    return fila.id_cliente as number;
+    return (fila?.id_cliente ?? 0) as number;
   }
 
   private formatearFechaHora(valor: unknown): string {

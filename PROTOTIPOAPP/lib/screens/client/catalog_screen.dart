@@ -42,7 +42,7 @@ class _ClientCatalogScreenState extends State<ClientCatalogScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Buscar por polera, pantalón, abrigo...',
+                hintText: 'Buscar poleras, canguros, hoodies, camisas...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(

@@ -24,18 +24,18 @@ void main() async {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
-      child: const TiendasMontanoApp(),
+      child: const TiendaVraApp(),
     ),
   );
 }
 
-class TiendasMontanoApp extends StatelessWidget {
-  const TiendasMontanoApp({super.key});
+class TiendaVraApp extends StatelessWidget {
+  const TiendaVraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tiendas Montaño Móvil',
+      title: 'Tienda VRA Móvil',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const MainNavScreen(),

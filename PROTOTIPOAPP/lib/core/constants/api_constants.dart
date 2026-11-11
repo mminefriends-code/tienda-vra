@@ -1,10 +1,10 @@
 class ApiConstants {
   // URL de Producción en Render o Desarrollo Local.
-  // Al desplegar en Render, reemplaza con tu URL de Render (ej: 'https://tiendas-montano-api.onrender.com/api/v1')
+  // Al desplegar en Render, reemplaza con tu URL de Render (ej: 'https://tienda-vra-api.onrender.com/api/v1')
   // O compila pasando: --dart-define=API_URL=https://tu-api.onrender.com/api/v1
   static String baseUrl = const String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://tiendas-montano-api.onrender.com/api/v1',
+    defaultValue: 'http://10.0.2.2:3000/api/v1',
   );
 
   static void setBaseUrl(String newUrl) {
@@ -34,6 +34,7 @@ class ApiConstants {
   // Carrito y Ventas
   static const String carrito = '/carrito';
   static const String carritoItems = '/carrito/items';
+  static const String carritoVaciar = '/carrito/vaciar';
   static const String checkout = '/ventas/checkout';
 
   // Vestidor RA y Recomendaciones IA

@@ -56,6 +56,7 @@ class _VirtualFittingScreenState extends State<VirtualFittingScreen>
   // Modos de ajuste
   EstiloAjusteRa _estiloAjuste = EstiloAjusteRa.regular;
   String _currentSize = 'L';
+  String _currentColor = 'Negro';
   bool _mostrarEsqueleto = true;
 
   // Ajustes de Calce y Gestos Táctiles Fluídos
@@ -90,6 +91,10 @@ class _VirtualFittingScreenState extends State<VirtualFittingScreen>
       } else {
         _currentSize = widget.product.tallas.first;
       }
+    }
+
+    if (widget.product.colores.isNotEmpty) {
+      _currentColor = widget.product.colores.first;
     }
 
     _animController = AnimationController(
@@ -335,6 +340,7 @@ class _VirtualFittingScreenState extends State<VirtualFittingScreen>
       codigo: widget.product.codigo,
       nombre: widget.product.nombre,
       imagenPrincipal: widget.product.imagenPrincipal,
+      color: _currentColor,
     );
     if (ruta != null) {
       final processed = await GarmentProcessor.processGarment(ruta);
@@ -893,6 +899,45 @@ class _VirtualFittingScreenState extends State<VirtualFittingScreen>
                 ),
               ],
             ),
+            if (widget.product.colores.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Color:',
+                    style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    children: widget.product.colores.map((c) {
+                      final isSel = c.toLowerCase() == _currentColor.toLowerCase();
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _currentColor = c);
+                          _loadAndProcessGarment();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isSel ? const Color(0xFF10B981) : Colors.white.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            c,
+                            style: TextStyle(
+                              color: isSel ? Colors.black : Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 12),
 
             // Fila 3: Acciones de Feedback

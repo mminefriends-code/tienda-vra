@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController(text: 'admin@tiendasmontano.bo');
+  final _emailController = TextEditingController(text: 'admin@tiendavra.bo');
   final _passwordController = TextEditingController(text: 'admin123');
   bool _obscurePassword = true;
 
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Tiendas Montaño',
+                'Tienda VRA',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.displayMedium,
               ),
@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
-                  hintText: 'ej. usuario@tiendasmontano.bo',
+                  hintText: 'ej. usuario@tiendavra.bo',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
               ),
@@ -155,17 +155,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ActionChip(
                     avatar: const Icon(Icons.admin_panel_settings, size: 16),
                     label: const Text('Admin', style: TextStyle(fontSize: 12)),
-                    onPressed: () => _quickFill('admin@tiendasmontano.bo', 'admin123'),
+                    onPressed: () => _quickFill('admin@tiendavra.bo', 'admin123'),
                   ),
                   ActionChip(
                     avatar: const Icon(Icons.storefront, size: 16),
-                    label: const Text('Vendedor Sucursal', style: TextStyle(fontSize: 12)),
-                    onPressed: () => _quickFill('vendedor.lapaz@tiendasmontano.bo', 'vend123'),
+                    label: const Text('Cajero / Vendedor', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _quickFill('caja.lapaz@tiendavra.bo', 'admin123'),
                   ),
                   ActionChip(
                     avatar: const Icon(Icons.person, size: 16),
-                    label: const Text('Cliente', style: TextStyle(fontSize: 12)),
-                    onPressed: () => _quickFill('maria.gonzales@correo.com', 'cliente123'),
+                    label: const Text('Cliente Demo', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _quickFill('maria.gonzales@correo.com', 'admin123'),
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.person_pin, size: 16),
+                    label: const Text('Cliente Personal', style: TextStyle(fontSize: 12)),
+                    onPressed: () => _quickFill('rojas@gmail.com', 'admin123'),
                   ),
                 ],
               ),

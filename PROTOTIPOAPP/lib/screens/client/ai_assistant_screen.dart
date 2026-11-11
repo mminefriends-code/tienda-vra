@@ -20,12 +20,12 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
   final _inputController = TextEditingController();
   final List<_ChatMessage> _messages = [
     _ChatMessage(
-      text: '¡Hola! Soy tu asistente de moda con Inteligencia Artificial de Tiendas Montaño. ¿Para qué ocasión o temporada buscas prendas hoy?',
+      text: '¡Hola! Soy tu asistente de moda con Inteligencia Artificial de Tienda VRA. ¿Para qué ocasión o temporada buscas prendas hoy?',
       isUser: false,
       recommendations: [
-        'Polera Cuello V Algodón (Beige)',
-        'Pantalón Sastre Lana (Gris)',
-        'Chaqueta Puffer Invierno (Negro)',
+        'Polera Básica Cuello Redondo Algodón Pima (Negro)',
+        'Polerón Canguro Hoodie Urbano con Capucha (Azul marino)',
+        'Sudadera Canguro Fleece Oversized (Gris)',
       ],
     ),
   ];
@@ -84,7 +84,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Recomendador generativo entrenado con el catálogo de Tiendas Montaño.',
+                    'Recomendador generativo entrenado con el catálogo de Tienda VRA.',
                     style: TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ),

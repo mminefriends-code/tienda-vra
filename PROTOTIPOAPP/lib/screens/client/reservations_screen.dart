@@ -97,7 +97,7 @@ class _ClientReservationsScreenState extends State<ClientReservationsScreen> {
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.person_outline),
                         onPressed: () async {
-                          await auth.login('cliente@tiendasmontano.bo', 'cliente123');
+                          await auth.login('maria.gonzales@correo.com', 'admin123');
                           if (mounted && auth.isAuthenticated) {
                             context.read<ReservationProvider>().fetchMyReservations();
                           }

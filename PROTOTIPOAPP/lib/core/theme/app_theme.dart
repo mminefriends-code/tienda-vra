@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Paleta de colores de Tiendas Montaño (Nieve y Azul Marino)
+  // Paleta de colores de Tienda VRA (Nieve y Azul Marino)
   static const Color moonlight = Color(0xFFC2C6C3);
   static const Color frostBlue = Color(0xFFC0D0EF);
   static const Color steel = Color(0xFF668DC0);
