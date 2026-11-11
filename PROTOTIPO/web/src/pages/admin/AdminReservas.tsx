@@ -280,17 +280,20 @@ function ModalDetalleReserva({
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-white p-3.5 text-center">
-                        <div className="rounded-lg border border-ink-200 p-2 bg-white shadow-xs">
+                        <div className="rounded-xl border border-ink-200 p-1.5 bg-white shadow-sm max-w-[210px]">
                           <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=TIENDAS_VRA_RES_${datos.reserva.id_reserva}_TOTAL_${totalEstimado}`}
-                            alt="QR de Pago Simple"
-                            className="h-28 w-28"
+                            src="/qr_pago.jpg"
+                            alt="QR Banco Unión - Junior Rojas"
+                            className="w-48 h-auto rounded-lg object-contain shadow-xs"
                           />
                         </div>
-                        <p className="text-xs font-bold text-ink-800">QR Bancario Simple · Red Enlace Bolivia</p>
-                        <p className="text-[11px] text-ink-500">
-                          El cliente escanea desde su app bancaria para pagar exactamente <b>Bs. {monto(totalEstimado)}</b>
+                        <p className="text-xs font-bold text-ink-800">Banco Unión S.A. · Pago QR Simple</p>
+                        <p className="text-[11px] text-ink-600">
+                          Destinatario: <b>Junior Rojas</b> · Cta: <b>10000051785283</b>
                         </p>
+                        <span className="inline-block rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700 border border-emerald-200">
+                          Total a cobrar: Bs. {monto(totalEstimado)}
+                        </span>
                       </div>
                     )}
 
