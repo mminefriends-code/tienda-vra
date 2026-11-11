@@ -5,7 +5,8 @@
 // inventario sube del umbral, o la reserva se atiende o se cancela, el
 // item desaparece en el siguiente ciclo.
 import { useCallback, useEffect, useState } from 'react';
-import { AlertOctagon, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertOctagon, AlertTriangle, Clock, RefreshCw, ShoppingCart } from 'lucide-react';
 import {
   api,
   type ItemQuiebreAlerta,
@@ -68,6 +69,7 @@ export function AdminAlertasCriticas() {
   const [datos, setDatos] = useState<RespuestaAlertasCriticas | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -177,6 +179,7 @@ export function AdminAlertasCriticas() {
                     <th className="px-4 py-2 text-right">Disponible</th>
                     <th className="px-4 py-2 text-right">Mínimo</th>
                     <th className="px-4 py-2">Estado</th>
+                    <th className="px-4 py-2 text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,6 +211,19 @@ export function AdminAlertasCriticas() {
                         >
                           {q.cantidad_disponible === 0 ? 'Sin stock' : 'Stock bajo'}
                         </span>
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <Button
+                          size="sm"
+                          className="gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-1 px-3 shadow-xs"
+                          onClick={() => {
+                            const faltante = Math.max(20, q.stock_minimo - q.cantidad_disponible);
+                            navigate(`/admin/ordenes-compra?auto=true&id_ptc=${q.id_ptc}&id_sucursal=${q.id_sucursal}&cantidad=${faltante}`);
+                          }}
+                        >
+                          <ShoppingCart size={13} />
+                          Reordenar Compra
+                        </Button>
                       </td>
                     </tr>
                   ))}

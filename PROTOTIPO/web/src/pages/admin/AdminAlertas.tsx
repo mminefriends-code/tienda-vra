@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AlertCircle, BellRing, CheckCircle, Layers, Plus, Settings2, ShoppingCart, Trash2, X } from 'lucide-react';
 import {
   api,
@@ -228,6 +228,7 @@ function ModalConfigurarUmbrales({
 
 export function AdminAlertas() {
   const { usuario, token } = useAuth();
+  const navigate = useNavigate();
 
   const [opciones, setOpciones] = useState<OpcionesKardex | null>(null);
   const [alertas, setAlertas] = useState<RespuestaAlertas | null>(null);
@@ -428,12 +429,17 @@ export function AdminAlertas() {
                     >
                       <Layers size={15} /> Ver Kardex
                     </Link>
-                    <Link
-                      to="/admin/ordenes-compra"
-                      className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-brand-700 underline-offset-4 transition hover:underline"
+                    <Button
+                      size="sm"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-700 shadow-xs"
+                      onClick={() => {
+                        navigate(
+                          `/admin/ordenes-compra?auto=true&id_ptc=${a.id_ptc}&id_sucursal=${a.id_sucursal}&cantidad=${Math.max(20, faltantes)}`,
+                        );
+                      }}
                     >
-                      <ShoppingCart size={15} /> Reordenar
-                    </Link>
+                      <ShoppingCart size={14} /> Reordenar Automático
+                    </Button>
                   </div>
                 </div>
               );

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, Eye, FileText, Package, Pencil, Plus, X, XCircle } from 'lucide-react';
+import { Navigate, useSearchParams } from 'react-router-dom';
+import { AlertCircle, CheckCircle, Eye, FileText, Package, Pencil, Plus, ShoppingCart, X, XCircle, Zap } from 'lucide-react';
 import {
   api,
   type CrearOrdenCompraPayload,
@@ -78,17 +78,26 @@ function RenglonesSkeleton({ columnas }: { columnas: number }) {
   );
 }
 
+export interface PrellenadoOrden {
+  id_proveedor?: string;
+  id_sucursal?: string;
+  id_ptc?: string;
+  cantidad?: string;
+  precio?: string;
+}
+
 interface ModalOrdenProps {
   abierto: boolean;
   opciones: OpcionesOrdenCompra | null;
   editando: DetalleOrdenCompra | null;
+  prellenado?: PrellenadoOrden | null;
   enviando: boolean;
   error: string | null;
   alCerrar: () => void;
   alGuardar: (payload: CrearOrdenCompraPayload) => void;
 }
 
-function ModalNuevaOrden({ abierto, opciones, editando, enviando, error, alCerrar, alGuardar }: ModalOrdenProps) {
+function ModalNuevaOrden({ abierto, opciones, editando, prellenado, enviando, error, alCerrar, alGuardar }: ModalOrdenProps) {
   const productos = opciones?.productos ?? [];
   const proveedores = opciones?.proveedores ?? [];
   const sucursales = opciones?.sucursales ?? [];
@@ -103,6 +112,32 @@ function ModalNuevaOrden({ abierto, opciones, editando, enviando, error, alCerra
   useEffect(() => {
     if (!abierto) return;
     contadorRef.current = 0;
+
+    if (!editando && prellenado) {
+      const provId = prellenado.id_proveedor || (proveedores[0] ? String(proveedores[0].id_proveedor) : '');
+      const sucId = prellenado.id_sucursal || (sucursales[0] ? String(sucursales[0].id_sucursal) : '');
+      const hoyMas5 = new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+      setProveedor(provId);
+      setSucursal(sucId);
+      setFecha(hoyMas5);
+      setObservaciones('Reposición automática generada desde Alertas de Stock Mínimo.');
+
+      const prodMatch = productos.find((p) => String(p.id_ptc) === String(prellenado.id_ptc));
+      const precioUnit = prellenado.precio || (prodMatch ? String(Math.round(prodMatch.precio_base * 0.5) || 35) : '35');
+
+      contadorRef.current = 1;
+      setLineas([
+        {
+          uid: 1,
+          id_ptc: String(prellenado.id_ptc ?? ''),
+          cantidad: String(prellenado.cantidad ?? '20'),
+          precio: precioUnit,
+        },
+      ]);
+      return;
+    }
+
     setProveedor(editando ? String(editando.id_proveedor ?? '') : '');
     setSucursal(editando ? String(editando.id_sucursal ?? '') : '');
     setFecha(editando?.fecha_estimada_entrega ?? new Date().toISOString().slice(0, 10));
@@ -124,7 +159,7 @@ function ModalNuevaOrden({ abierto, opciones, editando, enviando, error, alCerra
       contadorRef.current = 1;
     }
     setLineas(lineasIniciales);
-  }, [abierto, editando]);
+  }, [abierto, editando, prellenado, productos, proveedores, sucursales]);
 
   if (!abierto) return null;
 
@@ -203,6 +238,16 @@ function ModalNuevaOrden({ abierto, opciones, editando, enviando, error, alCerra
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5">
+          {prellenado && !editando && (
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+              <Zap size={16} className="mt-0.5 shrink-0 text-amber-600" />
+              <div>
+                <p className="font-bold">Orden pre-rellenada automáticamente por alerta de stock</p>
+                <p className="text-amber-700">Se precargaron la sucursal, la prenda en alerta y la cantidad sugerida de reposición para que solo revises y confirmes la orden.</p>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="flex items-start gap-2.5 rounded-xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
@@ -344,8 +389,8 @@ function ModalNuevaOrden({ abierto, opciones, editando, enviando, error, alCerra
             <Button type="button" variant="secondary" onClick={alCerrar} disabled={enviando}>
               Cancelar
             </Button>
-            <Button type="submit" loading={enviando} disabled={enviando || !formularioValido}>
-              {editando ? 'Guardar cambios' : 'Crear orden'}
+            <Button type="submit" loading={enviando} disabled={enviando || !formularioValido} className="gap-2 bg-brand-600 hover:bg-brand-700">
+              {editando ? 'Guardar cambios' : prellenado ? 'Confirmar y Emitir Orden a Proveedor' : 'Crear orden'}
             </Button>
           </div>
         </form>
@@ -516,6 +561,7 @@ const OPCIONES_ESTADO: Record<string, string[]> = {
 
 export function AdminOrdenesCompra() {
   const { usuario, token } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const [ordenes, setOrdenes] = useState<OrdenCompraItem[]>([]);
   const [opciones, setOpciones] = useState<OpcionesOrdenCompra | null>(null);
@@ -524,6 +570,7 @@ export function AdminOrdenesCompra() {
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState<DetalleOrdenCompra | null>(null);
+  const [prellenado, setPrellenado] = useState<PrellenadoOrden | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [errorModal, setErrorModal] = useState<string | null>(null);
 
@@ -559,6 +606,26 @@ export function AdminOrdenesCompra() {
       void cargar();
     }
   }, [cargar, permisoOk, token]);
+
+  useEffect(() => {
+    if (!opciones) return;
+    const auto = searchParams.get('auto') === 'true';
+    if (auto) {
+      const id_ptc = searchParams.get('id_ptc');
+      const id_sucursal = searchParams.get('id_sucursal');
+      const cantidad = searchParams.get('cantidad');
+      const provDefault = opciones.proveedores?.[0]?.id_proveedor;
+      setPrellenado({
+        id_proveedor: provDefault,
+        id_sucursal: id_sucursal ? Number(id_sucursal) : opciones.sucursales?.[0]?.id_sucursal,
+        id_ptc: id_ptc ? Number(id_ptc) : undefined,
+        cantidad: cantidad ? Number(cantidad) : 20,
+      });
+      setEditando(null);
+      setErrorModal(null);
+      setModalAbierto(true);
+    }
+  }, [opciones, searchParams]);
 
   const abrirDetalle = async (o: OrdenCompraItem) => {
     setCargandoDetalle(o.id_orden_compra);
@@ -623,6 +690,7 @@ export function AdminOrdenesCompra() {
   const nueva = () => {
     setErrorModal(null);
     setEditando(null);
+    setPrellenado(null);
     setModalAbierto(true);
   };
 
@@ -766,11 +834,13 @@ export function AdminOrdenesCompra() {
         abierto={modalAbierto}
         opciones={opciones}
         editando={editando}
+        prellenado={prellenado}
         enviando={enviando}
         error={errorModal}
         alCerrar={() => {
           setModalAbierto(false);
           setEditando(null);
+          setPrellenado(null);
           setErrorModal(null);
         }}
         alGuardar={(payload) => void guardar(payload)}

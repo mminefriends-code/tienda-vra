@@ -201,15 +201,19 @@ export class DashboardService {
               COALESCE(SUM(i.cantidad_reservada), 0)  AS reservadas,
               COALESCE(SUM(i.cantidad_vendida), 0)    AS vendidas
          FROM inventario_stock i
-        WHERE 1 = 1${pInv}`,
+         JOIN producto_talla_color ptc ON ptc.id_ptc = i.id_ptc
+         JOIN productos p ON p.id_producto = ptc.id_producto
+        WHERE p.estado = 'Activo'${pInv}`,
       conSucursal ? [idSucursal] : [],
     );
 
     const agotadas = await db.query(
       `SELECT COUNT(*) AS agotadas
          FROM producto_talla_color ptc
+         JOIN productos p ON p.id_producto = ptc.id_producto
          JOIN inventario_stock i ON i.id_ptc = ptc.id_ptc
-        WHERE i.cantidad_disponible <= 0${pInv}`,
+        WHERE p.estado = 'Activo'
+          AND i.cantidad_disponible <= 0${pInv}`,
       conSucursal ? [idSucursal] : [],
     );
 
@@ -236,7 +240,10 @@ export class DashboardService {
     const alertas = await db.query(
       `SELECT COUNT(*) AS total
          FROM inventario_stock i
-        WHERE i.cantidad_disponible <= i.stock_minimo_alert
+         JOIN producto_talla_color ptc ON ptc.id_ptc = i.id_ptc
+         JOIN productos p ON p.id_producto = ptc.id_producto
+        WHERE p.estado = 'Activo'
+          AND i.cantidad_disponible <= i.stock_minimo_alert
           AND i.cantidad_disponible > 0${pInv}`,
       conSucursal ? [idSucursal] : [],
     );
@@ -244,7 +251,11 @@ export class DashboardService {
     const stockPorSucursal = await db.query(
       `SELECT s.nombre AS etiqueta, COALESCE(SUM(i.cantidad_disponible), 0) AS valor
          FROM sucursales s
-         LEFT JOIN inventario_stock i ON i.id_sucursal = s.id_sucursal
+         LEFT JOIN (
+           inventario_stock i
+           JOIN producto_talla_color ptc ON ptc.id_ptc = i.id_ptc
+           JOIN productos p ON p.id_producto = ptc.id_producto AND p.estado = 'Activo'
+         ) ON i.id_sucursal = s.id_sucursal
         WHERE s.estado = 'Activa'
         GROUP BY s.nombre, s.id_sucursal
         ORDER BY s.id_sucursal ASC`,
