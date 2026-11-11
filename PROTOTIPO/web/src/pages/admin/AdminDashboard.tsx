@@ -3,6 +3,7 @@
 // reservas y alertas. Los graficos son barras y anillo hechos con CSS puro,
 // sin librerias externas, para no anadir dependencias al proyecto.
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   Boxes,
@@ -10,6 +11,7 @@ import {
   PackageSearch,
   RefreshCw,
   ShoppingBag,
+  Store,
   TrendingUp,
   Ticket,
 } from 'lucide-react';
@@ -32,22 +34,31 @@ function numero(n: number): string {
   return new Intl.NumberFormat('es-BO').format(n || 0);
 }
 
-// Barra horizontal proporcional. Se usa para ventas por sucursal y por mes.
-function GraficoBarras({ datos }: { datos: PuntoSerieDashboard[] }) {
+// Barra horizontal proporcional. Se usa para ventas por sucursal, existencias y por mes.
+function GraficoBarras({
+  datos,
+  formateador,
+}: {
+  datos?: PuntoSerieDashboard[];
+  formateador?: (valor: number) => string;
+}) {
+  const lista = datos ?? [];
   const maximo = useMemo(
-    () => Math.max(1, ...datos.map((d) => d.valor)),
-    [datos],
+    () => Math.max(1, ...lista.map((d) => d.valor)),
+    [lista],
   );
-  if (datos.length === 0) {
+  if (lista.length === 0) {
     return <p className="py-6 text-center text-sm text-ink-400">Sin datos en el período.</p>;
   }
   return (
     <ul className="space-y-3">
-      {datos.map((d) => (
+      {lista.map((d) => (
         <li key={d.etiqueta}>
           <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
             <span className="truncate text-ink-700">{d.etiqueta}</span>
-            <span className="shrink-0 font-semibold text-ink-900">{money(d.valor)}</span>
+            <span className="shrink-0 font-semibold text-ink-900">
+              {formateador ? formateador(d.valor) : money(d.valor)}
+            </span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-ink-100">
             <div
@@ -346,6 +357,25 @@ export function AdminDashboard() {
             <article className="rounded-2xl border border-ink-800 bg-white p-4">
               <h2 className="mb-4 text-sm font-semibold text-ink-70">Ventas por mes</h2>
               <GraficoBarras datos={datos.series.ventas_por_mes} />
+            </article>
+
+            <article className="rounded-2xl border border-ink-800 bg-white p-4">
+              <h2 className="mb-4 flex items-center justify-between text-sm font-semibold text-ink-70">
+                <span className="flex items-center gap-2">
+                  <Store className="h-4 w-4 text-emerald-600" />
+                  Stock y Existencias por Sucursal
+                </span>
+                <Link
+                  to="/admin/inventario/existencias"
+                  className="text-xs font-bold text-brand-600 hover:underline"
+                >
+                  Ver matriz detallada →
+                </Link>
+              </h2>
+              <GraficoBarras
+                datos={datos.series.existencias_por_sucursal}
+                formateador={(v) => `${numero(v)} prendas`}
+              />
             </article>
 
             <article className="rounded-2xl border border-ink-800 bg-white p-4">

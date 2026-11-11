@@ -49,6 +49,7 @@ export interface RespuestaDashboard {
     ventas_por_mes: PuntoSerie[];
     reservas_por_estado: PuntoSerie[];
     existencias: PuntoSerie[];
+    existencias_por_sucursal: PuntoSerie[];
   };
   topProductos: ProductoTop[];
   sin_datos: boolean;
@@ -240,6 +241,15 @@ export class DashboardService {
       conSucursal ? [idSucursal] : [],
     );
 
+    const stockPorSucursal = await db.query(
+      `SELECT s.nombre AS etiqueta, COALESCE(SUM(i.cantidad_disponible), 0) AS valor
+         FROM sucursales s
+         LEFT JOIN inventario_stock i ON i.id_sucursal = s.id_sucursal
+        WHERE s.estado = 'Activa'
+        GROUP BY s.nombre, s.id_sucursal
+        ORDER BY s.id_sucursal ASC`,
+    );
+
     // ---- 9. kpis y series ----
     const disponibles = Number(inv[0]?.disponibles ?? 0);
     const reservadas = Number(inv[0]?.reservadas ?? 0);
@@ -291,6 +301,10 @@ export class DashboardService {
           { etiqueta: 'Vendidas', valor: vendidas },
           { etiqueta: 'Agotadas', valor: agotadasN },
         ],
+        existencias_por_sucursal: (stockPorSucursal as PuntoSerie[]).map((r) => ({
+          etiqueta: r.etiqueta,
+          valor: Number(r.valor),
+        })),
       },
       topProductos: (top as ProductoTop[]).map((p) => ({
         nombre: p.nombre,

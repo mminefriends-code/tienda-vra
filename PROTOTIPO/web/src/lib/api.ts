@@ -2290,6 +2290,7 @@ export type RespuestaDashboard = {
     ventas_por_mes: PuntoSerieDashboard[];
     reservas_por_estado: PuntoSerieDashboard[];
     existencias: PuntoSerieDashboard[];
+    existencias_por_sucursal?: PuntoSerieDashboard[];
   };
   topProductos: ProductoTopDashboard[];
   sin_datos: boolean;
