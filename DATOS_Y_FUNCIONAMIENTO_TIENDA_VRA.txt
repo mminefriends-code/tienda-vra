@@ -1,0 +1,198 @@
+================================================================================
+   PLATAFORMA E-COMMERCE OMNICANAL Y GESTIÓN DE INVENTARIOS - TIENDA VRA (SI2)
+                  GUÍA COMPLETA DE DATOS, ROLES Y FUNCIONAMIENTO
+================================================================================
+Fecha de generación: 13 de Noviembre de 2026
+Autor / Estudiante: Junior Rojas
+Proyecto: Sistemas de Información II (SI2) - E-Commerce Omnicanal y Cadena de Suministro
+
+--------------------------------------------------------------------------------
+1. ENLACES DE ACCESO AL SISTEMA (WEB, API Y RED REMOTA)
+--------------------------------------------------------------------------------
+A) Acceso desde la misma PC de escritorio:
+   - Plataforma Web / Tienda / Panel Admin:  http://localhost:5173
+   - API Backend NestJS:                     http://localhost:3000/api/v1
+   - Documentación Swagger API:              http://localhost:3000/docs (si está habilitado)
+
+B) Acceso desde otra Laptop o Celular conectado a la MISMA RED WI-FI de tu casa:
+   - Plataforma Web:                         http://192.168.0.11:5173
+   - API Backend:                            http://192.168.0.11:3000/api/v1
+
+C) Acceso Remoto por INTERNET (Desde cualquier parte del mundo / Datos móviles):
+   - Plataforma Web (Cloudflare Tunnel):
+     https://planes-communicate-horn-louisiana.trycloudflare.com
+   - API Backend (Cloudflare Tunnel):
+     https://neighborhood-delivering-writers-rating.trycloudflare.com/api/v1
+
+* NOTA IMPORTANTE SOBRE ENLACES REMOTOS:
+  Los enlaces remotos de Cloudflare Tunnel se mantienen activos mientras la PC
+  esté encendida con los servicios activos. Si se reinicia el sistema, se generan
+  nuevos subdominios gratuitos de alta velocidad y seguridad SSL.
+
+--------------------------------------------------------------------------------
+2. APLICACIÓN MÓVIL ANDROID (FLUTTER)
+--------------------------------------------------------------------------------
+- Nombre de la App: Tienda VRA
+- Estado: Compilada e instalada en tu dispositivo Tecno Spark 20 Pro+
+- Ubicación del instalador APK de respaldo:
+  C:\Users\Junior\.gemini\antigravity\scratch\PLATAFORMA-E-COMMERCE-SI2-main\TiendaVRA_App.apk
+
+- SELECTOR DINÁMICO DE SERVIDOR EN LA APP MÓVIL:
+  En la pantalla de Login de la App, en la esquina superior derecha encontrarás
+  un icono de engranaje (⚙️). Al presionarlo puedes elegir:
+  1. Servidor Remoto (Cloudflare Tunnel):
+     https://neighborhood-delivering-writers-rating.trycloudflare.com
+     (Para usar la app con tus megas/datos móviles en cualquier lugar).
+  2. Red Wi-Fi Local:
+     http://192.168.0.11:3000
+     (Para cuando tu celular esté en la misma red Wi-Fi de tu casa).
+  3. Personalizado:
+     Permite escribir manualmente cualquier dirección IP o dominio.
+
+--------------------------------------------------------------------------------
+3. USUARIOS, ROLES Y CREDENCIALES DE ACCESO
+--------------------------------------------------------------------------------
+Todas las cuentas de prueba tienen la misma contraseña para facilitar la defensa:
+Contraseña general: admin123
+
+[1] SUPER ADMINISTRADOR (Control total del sistema)
+    - Correo:       admin@tiendavra.bo
+    - Contraseña:   admin123
+    - Rol:          SUPER_ADMIN
+    - Permisos:     Gestión global de sucursales, usuarios, reportes financieros,
+                    auditoría, configuraciones de pasarela y parámetros globales.
+
+[2] ADMINISTRADOR GENERAL (Operaciones y Cadena de Suministro)
+    - Correo:       dayana.rojas@tiendavra.bo
+    - Contraseña:   admin123
+    - Rol:          ADMIN
+    - Permisos:     Catálogo completo, creación de productos y variantes,
+                    proveedores, órdenes de compra y supervisión de reservas.
+
+[3] CAJERO / ENCARGADO SUCURSAL LA PAZ (Centro)
+    - Correo:       caja.lapaz@tiendavra.bo  (Alternativo: julio.paredes@tiendavra.bo)
+    - Contraseña:   admin123
+    - Rol:          CAJERO / ENCARGADO_SUCURSAL
+    - Sucursal:     Sucursal Centro La Paz
+    - Permisos:     Recepción y cobro de reservas de probador en tienda, caja chica,
+                    arqueo de turno, ventas presenciales con Efectivo o QR Banco Unión.
+
+[4] CAJERO / ENCARGADO SUCURSAL SANTA CRUZ (Equipetrol)
+    - Correo:       caja.scz@tiendavra.bo
+    - Contraseña:   admin123
+    - Rol:          CAJERO
+    - Sucursal:     Sucursal Equipetrol Santa Cruz
+
+[5] CAJERO / ENCARGADO SUCURSAL COCHABAMBA (Cala Cala)
+    - Correo:       caja.cbb@tiendavra.bo
+    - Contraseña:   admin123
+    - Rol:          CAJERO
+    - Sucursal:     Sucursal Cala Cala Cochabamba
+
+[6] CLIENTES DE PRUEBA (Para demostración de compras y reservas)
+    - Cliente 1:    maria.gonzales@correo.com  |  Clave: admin123
+    - Cliente 2:    rojas@gmail.com            |  Clave: admin123
+                    (Cliente con historial de pedidos y reservas activas)
+
+--------------------------------------------------------------------------------
+4. SUCURSALES FÍSICAS REGISTRADAS
+--------------------------------------------------------------------------------
+1. Sucursal Centro La Paz:
+   - Dirección: Av. Mariscal Santa Cruz #123, Zona Central, La Paz
+   - Cuenta con probadores inteligentes y stock de poleras/canguros.
+2. Sucursal Equipetrol Santa Cruz:
+   - Dirección: Av. San Martín #456, Barrio Equipetrol, Santa Cruz de la Sierra
+3. Sucursal Cala Cala Cochabamba:
+   - Dirección: Av. Libertador #789, Zona Cala Cala, Cochabamba
+
+--------------------------------------------------------------------------------
+5. CATÁLOGO ACTIVO DE PRODUCTOS (POLERAS Y CANGUROS VRA)
+--------------------------------------------------------------------------------
+El catálogo fue optimizado para reflejar la identidad de marca VRA Streetwear:
+
+- POLERAS:
+  * POL-101: Polera Oversize VRA Essential
+    Colores: Negro, Blanco, Plomo | Tallas: S, M, L, XL | Precio: Bs. 120.00
+  * POL-102: Polera Urbana Graphic Streetwear
+    Colores: Negro, Beige | Tallas: M, L | Precio: Bs. 135.00
+  * POL-103: Polera Classic Fit Algodón Pima
+    Colores: Azul Marino, Blanco | Tallas: S, M, L | Precio: Bs. 110.00
+  * POL-104: Polera Manga Larga Ribbed Casual
+    Colores: Negro, Gris | Tallas: M, L | Precio: Bs. 140.00
+
+- CANGUROS / HOODIES:
+  * POL-003: Polera Canguro Oversize Heavy Fleece
+    Colores: Negro, Gris Melange | Tallas: M, L, XL | Precio: Bs. 210.00
+  * POL-005: Canguro Hoodie Zip Minimalist
+    Colores: Negro | Tallas: M, L | Precio: Bs. 230.00
+
+--------------------------------------------------------------------------------
+6. PROVEEDORES Y DATOS FINANCIEROS (PAGO QR / BANCOS)
+--------------------------------------------------------------------------------
+- Proveedor Principal de Textil y Confección:
+  * Nombre: Modaprints S.R.L.
+  * Contacto: lic.rodriguez@modaprints.bo
+  * Plazo de entrega habitual: 48 horas
+
+- Configuración de Cobro QR Simple en Tienda:
+  * Banco: Banco Unión S.A.
+  * Titular: Junior Rojas
+  * Número de Cuenta: 10000051785283
+  * Tipo de Cuenta: Caja de Ahorro en Bolivianos (BOB)
+
+--------------------------------------------------------------------------------
+7. FLUJOS PRINCIPALES PARA LA DEFENSA ANTE EL TRIBUNAL
+--------------------------------------------------------------------------------
+
+A) FLUJO 1: EXPERIENCIA OMNICANAL - RESERVA WEB/MÓVIL Y ATENCIÓN EN PROBADOR
+   1. El cliente (desde su celular o laptop) entra al catálogo web o app móvil.
+   2. Elige un producto (ej. Polera Oversize Negra Talla L) y selecciona la
+      sucursal "Centro La Paz".
+   3. Presiona "Reservar para probar en tienda".
+   4. IMPACTO EN BASE DE DATOS E INVENTARIO:
+      - El stock en `cantidad_disponible` se descuenta de inmediato.
+      - La prenda pasa a `cantidad_reservada` para apartarla físicamente.
+      - Se genera un código de reserva único con código QR.
+   5. ATENCIÓN EN TIENDA (Panel `/admin/reservas`):
+      - El cajero de La Paz ve la reserva con estado "Pendiente".
+      - Al llegar el cliente, el cajero marca "En tienda" (preparado en probador).
+      - CASO A: EL CLIENTE DECIDE COMPRAR:
+        El cajero presiona "Cobrar Venta". Elige Efectivo (con cálculo de cambio)
+        o QR Banco Unión. Al confirmar, `cantidad_reservada` se liquida,
+        se suma a `cantidad_vendida` y se emite el recibo/factura.
+      - CASO B: EL CLIENTE SE PRUEBA Y NO LE GUSTÓ / NO COMPRÓ:
+        El cajero presiona "No compró" o "Cancelar". La función automática
+        `liberarStockReserva` devuelve inmediatamente el stock a
+        `cantidad_disponible` para que no se quede bloqueado.
+
+B) FLUJO 2: CONTROL DE STOCK CRÍTICO Y REORDEN AUTOMÁTICA A PROVEEDOR
+   1. Acceder a `/admin/inventario/alertas` o `/admin/alertas/criticas`.
+   2. El sistema compara el stock disponible en cada sucursal contra el
+      punto de pedido / stock mínimo configurado.
+   3. Si una prenda tiene stock bajo (ej. quedan 2 unidades y el mínimo es 5),
+      aparece la alerta roja indicando el déficit exacto.
+   4. Botón "Reordenar": Al hacer clic directo sobre la alerta, el sistema
+      abre automáticamente el modal de Orden de Compra (`/admin/ordenes-compra`)
+      pre-llenado con la Sucursal, el Proveedor (Modaprints S.R.L.), la variante
+      y la cantidad faltante sugerida.
+   5. Con 1 solo clic se formaliza la orden al proveedor.
+
+C) FLUJO 3: GESTIÓN DE ROLES Y SEGURIDAD RBAC
+   - Si un usuario ingresa como Cajero, solo tiene acceso a la caja y reservas
+     de su sucursal asignada.
+   - Si ingresa el Administrador General o Super Admin, tiene visión omnicanal
+     de todas las sucursales, auditoría de eventos y reportes consolidados.
+
+--------------------------------------------------------------------------------
+8. COMANDOS RÁPIDOS Y SCRIPTS DE INICIO
+--------------------------------------------------------------------------------
+- Para iniciar todo con 1 doble clic en Windows:
+  Ejecutar el archivo: C:\Users\Junior\Desktop\INICIAR_TIENDA_VRA.bat
+  (Abre automáticamente el Backend NestJS, Frontend Vite y Túneles Cloudflare).
+
+- O en el chat de Antigravity decir:
+  "Activa todos los servicios para la defensa"
+
+- Para apagar todos los servicios:
+  Decir en el chat: "apaga todo" o cerrar las ventanas de terminal.
+================================================================================
